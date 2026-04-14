@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANDROMEDA | CRM SMM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; font-size: 13px; scroll-behavior: smooth; }
+        .status-idea { border-left: 5px solid #9ca3af; }
+        .status-work { border-left: 5px solid #3b82f6; }
+        .status-ready { border-left: 5px solid #10b981; }
+        .status-published { border-left: 6px solid #6366f1; }
+        .multi-select-box { max-height: 130px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 8px; border-radius: 12px; background: #f8fafc; }
+        .tab-active { background: #1e293b !important; color: white !important; }
+        #loginOverlay { background: radial-gradient(circle at center, #1e293b 0%, #000 100%); z-index: 9999; position: fixed; inset: 0; }
+        .admin-only { display: none; }
+    </style>
+</head>
+<body class="bg-[#f1f5f9] min-h-screen text-slate-900 font-medium">
+
+    <!-- LOGIN -->
+    <div id="loginOverlay" class="flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl border text-center">
+            <h1 class="text-3xl font-black uppercase tracking-tighter mb-1">ANDROMEDA</h1>
+            <p class="text-blue-600 font-bold uppercase text-[9px] mb-10 italic">CRM SMM SYSTEM</p>
+            <div class="space-y-4">
+                <select id="loginUser" class="w-full border-2 p-3.5 rounded-2xl font-bold outline-none text-xs bg-slate-50 text-center appearance-none">
+                    <option value="Татьяна Петрова">Татьяна Петрова</option>
+                    <option value="Андрей Чебыкин">Андрей Чебыкин</option>
+                    <option value="Павел Храмцов">Павел Храмцов</option>
+                    <option value="Дмитрий Хандюков">Дмитрий Хандюков</option>
+                    <option value="admin">Администратор</option>
+                </select>
+                <input type="password" id="loginPass" placeholder="Пароль" class="w-full border-2 p-3.5 rounded-2xl font-bold text-center outline-none">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl uppercase text-xs">Войти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP CONTENT -->
+    <div id="appContent" class="hidden opacity-0 transition-opacity duration-500">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-10">
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-black text-slate-900">ANDROMEDA</h1>
+                    <span class="text-[9px] font-black text-blue-600 uppercase italic">CRM SMM Pro</span>
+                </div>
+                <div class="flex bg-slate-100 p-1 rounded-xl font-black text-[9px] gap-1">
+                    <button onclick="switchView('list')" id="btnViewList" class="px-4 py-2 rounded-lg tab-active">Список</button>
+                    <button onclick="switchView('stats')" id="btnViewStats" class="px-4 py-2 rounded-lg text-slate-400">Статистика</button>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <div id="currentUserDisplay" class="text-[10px] font-black uppercase"></div>
+                <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase">Выход</button>
+            </div>
+        </header>
+
+        <main class="max-w-[1800px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- CREATE TASK FORM -->
+            <aside class="lg:col-span-3">
+                <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 sticky top-24">
+                    <form id="ideaForm" class="space-y-4">
+                        <h3 class="text-[9px] font-black text-slate-300 uppercase text-center">Новая задача</h3>
+                        <input type="text" id="title" placeholder="Тема поста" required class="w-full border-2 p-3 rounded-xl text-xs font-bold outline-none">
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="work_type" class="border-2 p-3 rounded-xl text-[10px] font-bold"><option value="Пост">ПОСТ</option><option value="Короткое видео">ВИДЕО</option></select>
+                            <select id="tag" class="border-2 p-3 rounded-xl text-[10px] font-bold text-blue-600"><option value="ФРК">ФРК</option><option value="УТП">УТП</option></select>
+                        </div>
+                        <textarea id="description" placeholder="Описание" class="w-full border-2 p-3 rounded-xl text-xs h-20 outline-none"></textarea>
+                        
+                        <label class="text-[8px] font-black text-slate-400 uppercase">Площадки</label>
+                        <div id="channelList" class="multi-select-box text-[9px]"></div>
+                        
+                        <label class="text-[8px] font-black text-slate-400 uppercase">Исполнители</label>
+                        <div id="executorList" class="multi-select-box text-[9px]"></div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="date_val" class="w-full border rounded-lg p-2 text-[10px] font-bold">
+                        </div>
+                        <button type="submit" id="createBtn" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-[9px] shadow-lg">Создать</button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- LIST -->
+            <div class="lg:col-span-9 space-y-6">
+                <div id="view-list" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                
+                <div id="view-stats" class="hidden space-y-6">
+                    <div id="adminPanel" class="admin-only bg-slate-900 p-6 rounded-[2rem] text-white">
+                         <input type="password" id="apifyToken" placeholder="Apify Token" class="bg-slate-800 p-2 rounded w-full text-xs">
+                         <button onclick="saveAdminSettings()" class="bg-blue-600 p-2 rounded mt-2 text-[10px] w-full">СОХРАНИТЬ КЛЮЧИ</button>
+                    </div>
+                    <div id="statsTableContainer"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- EDIT MODAL (упрощено для примера) -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[2rem] p-8">
+            <h2 id="editTitleLabel" class="font-black uppercase mb-4">Правка</h2>
+            <div id="linkInputs" class="space-y-2 mb-6"></div>
+            <button onclick="saveTaskLinks()" class="bg-slate-900 text-white w-full p-4 rounded-xl font-bold uppercase text-xs">Сохранить ссылки</button>
+            <button onclick="closeModal()" class="w-full mt-2 text-slate-400 text-[10px] uppercase">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://snfdwowgattembkueops.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const TEAM = ["Татьяна Петрова", "Андрей Чебыкин", "Павел Храмцов", "Дмитрий Хандюков", "Олеся Подъелец"];
+        const CHANNELS = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
+
+        let contentData = [], currentView = 'list', editingId = null;
+
+        // --- AUTH ---
+        async function handleLogin() {
+            const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value;
+            const { data, error } = await _supabase.from('profiles').select('*').eq('username', u).eq('password', p).single();
+            if (data) {
+                sessionStorage.setItem('e_active', 'true');
+                sessionStorage.setItem('e_name', data.display_name);
+                sessionStorage.setItem('e_role', data.role);
+                location.reload();
+            } else {
+                alert("Ошибка: Неверный пароль или пользователь не найден в базе данных.");
+            }
+        }
+
+        function checkAuth() {
+            if (sessionStorage.getItem('e_active') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('appContent').classList.remove('hidden');
+                document.getElementById('appContent').style.opacity = '1';
+                document.getElementById('currentUserDisplay').innerText = sessionStorage.getItem('e_name');
+                if (sessionStorage.getItem('e_role') === 'admin') document.querySelectorAll('.admin-only').forEach(e => e.style.display='block');
+                initUI(); loadAllData();
+            }
+        }
+
+        function initUI() {
+            const fill = (id, list) => {
+                document.getElementById(id).innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer"><input type="checkbox" value="${i}" name="${id}"> <span class="uppercase font-bold text-slate-600">${i}</span></label>`).join('');
+            };
+            fill('channelList', CHANNELS); fill('executorList', TEAM);
+        }
+
+        // --- DATA ---
+        async function loadAllData() {
+            const { data, error } = await _supabase.from('tasks').select('*').eq('is_deleted', false).order('created_at', {ascending: false});
+            if (error) { console.error(error); return; }
+            contentData = data;
+            renderCards();
+        }
+
+        // --- CREATE TASK (ИСПРАВЛЕНО) ---
+        document.getElementById('ideaForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('createBtn');
+            btn.innerText = "ЗАГРУЗКА...";
+            btn.disabled = true;
+
+            const newTask = {
+                title: document.getElementById('title').value,
+                work_type: document.getElementById('work_type').value,
+                tag: document.getElementById('tag').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('date_val').value || new Date().toISOString().split('T')[0],
+                channels: Array.from(document.querySelectorAll('input[name="channelList"]:checked')).map(cb => cb.value),
+                executors: Array.from(document.querySelectorAll('input[name="executorList"]:checked')).map(cb => cb.value),
+                responsible: sessionStorage.getItem('e_name'),
+                status: 'idea',
+                play_count: 0
+            };
+
+            const { error } = await _supabase.from('tasks').insert([newTask]);
+
+            if (error) {
+                alert("Ошибка базы данных: " + error.message);
+            } else {
+                e.target.reset();
+                await loadAllData();
+            }
+            btn.innerText = "СОЗДАТЬ";
+            btn.disabled = false;
+        };
+
+        function renderCards() {
+            const container = document.getElementById('view-list');
+            container.innerHTML = contentData.map(i => `
+                <div class="bg-white p-6 rounded-[2rem] border-l-8 status-${i.status} shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[8px] font-black uppercase text-blue-500">${i.work_type}</span>
+                        <button onclick="openEditModal(${i.id})" class="text-slate-300 hover:text-blue-500">✏️</button>
+                    </div>
+                    <h3 class="font-black uppercase text-xs text-slate-800 leading-tight mb-4">${i.title}</h3>
+                    <div class="flex justify-between items-center pt-4 border-t">
+                        <span class="text-[9px] font-bold text-slate-400">${i.responsible}</span>
+                        <span class="text-emerald-600 font-black text-[10px]">👁️ ${Number(i.play_count || 0).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openEditModal(id) {
+            editingId = id;
+            const task = contentData.find(x => x.id === id);
+            document.getElementById('editTitleLabel').innerText = task.title;
+            const container = document.getElementById('linkInputs');
+            container.innerHTML = task.channels.map(ch => `
+                <div class="flex flex-col">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase mb-1">${ch}</label>
+                    <input type="url" data-ch="${ch}" value="${task.links?.[ch] || ''}" class="link-input border p-2 rounded-lg text-xs outline-none focus:border-blue-500">
+                </div>
+            `).join('');
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        async function saveTaskLinks() {
+            const links = {};
+            document.querySelectorAll('.link-input').forEach(input => {
+                links[input.dataset.ch] = input.value;
+            });
+            const { error } = await _supabase.from('tasks').update({ links: links, status: 'published' }).eq('id', editingId);
+            if (error) alert(error.message);
+            else { closeModal(); loadAllData(); }
+        }
+
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+        function logout() { sessionStorage.clear(); location.reload(); }
+        function switchView(v) {
+            currentView = v;
+            document.getElementById('view-list').classList.toggle('hidden', v !== 'list');
+            document.getElementById('view-stats').classList.toggle('hidden', v !== 'stats');
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>

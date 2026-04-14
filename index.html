@@ -408,36 +408,97 @@
         }
 
         async function fetchSingleStat(url, platform) {
-            if (!url || url.length < 10) return 0;
-            const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
-            try {
-                if (platform === 'VK' && AP_TOKEN) {
-                    const res = await fetch(`https://api.apify.com/v2/acts/apify/vkontakte-scraper/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ startUrls: [{ url: url }], maxItems: 1 })});
-                    const d = await res.json(); return d[0]?.viewsCount || d[0]?.views?.count || 0;
-                }
-                if (TG_LIST.includes(platform) || url.includes('t.me/')) {
-                    let sUrl = url.trim().replace('t.me/', 't.me/s/');
-                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
-                    const d = await res.json(), m = d.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
-                    if (m) { let t = m[1].toUpperCase(); return t.includes('K') ? parseFloat(t)*1000 : (t.includes('M') ? parseFloat(t)*1000000 : parseInt(t.replace(/\D/g,'')) || 0); }
-                }
-                if (platform === 'YouTube' && YT_KEY) {
-                    const vidId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
-                    if (vidId) { const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`); const d = await res.json(); return parseInt(d.items?.[0]?.statistics?.viewCount || 0); }
-                }
-                if (platform === 'TikTok' && AP_TOKEN) {
-                    const res = await fetch(`https://api.apify.com/v2/acts/GdWCkxBtKWOsKjdch/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ postURLs: [url] })});
-                    const d = await res.json(); return d[0]?.playCount || 0;
-                }
-                if (platform === 'Instagram' && AP_TOKEN) {
-                    const isReel = url.includes('/reel/') || url.includes('/reels/');
-                    const actor = isReel ? "apify/instagram-reel-scraper" : "apify/instagram-post-scraper";
-                    const input = isReel ? { reelsUrls: [url] } : { directUrls: [url] };
-                    const res = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)});
-                    const d = await res.json(); return d[0] ? (d[0].videoPlayCount || d[0].videoViewCount || d[0].playCount || d[0].likesCount || 0) : 0;
-                }
-            } catch (e) { return 0; } return 0;
+    if (!url || url.length < 10) return 0;
+    const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
+    
+    // Вспомогательная функция для запроса к Apify
+    const callApify = async (actor, input) => {
+        try {
+            const response = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(input)
+            });
+            return await response.json();
+        } catch (e) {
+            console.error(`Apify fetch error [${platform}]:`, e);
+            return null;
         }
+    };
+
+    try {
+        // --- INSTAGRAM (Posts & Reels) ---
+        if (platform === 'Instagram' && AP_TOKEN) {
+            // Используем мощный универсальный скрапер
+            const data = await callApify("apify/instagram-scraper", {
+                "directUrls": [url],
+                "resultsLimit": 1,
+                "proxyConfiguration": { "useApifyProxy": true } 
+            });
+
+            if (data && data.length > 0) {
+                const item = data[0];
+                // Проверяем все возможные варианты названий полей просмотров
+                const views = item.videoViewCount || item.videoPlayCount || item.displayViewCount || item.playsCount || 0;
+                console.log(`Instagram Data for ${url}:`, views); // Увидите результат в консоли
+                return Number(views);
+            }
+        }
+
+        // --- VK ---
+        if (platform === 'VK' && AP_TOKEN) {
+            const data = await callApify("apify/vkontakte-scraper", { 
+                startUrls: [{ url: url }], 
+                maxItems: 1 
+            });
+            if (data && data.length > 0) {
+                const views = data[0].viewsCount || data[0].views?.count || 0;
+                return Number(views);
+            }
+        }
+
+        // --- TIKTOK ---
+        if (platform === 'TikTok' && AP_TOKEN) {
+            const data = await callApify("clockworks/tiktok-scraper", { 
+                postURLs: [url], 
+                maxMessages: 1 
+            });
+            if (data && data.length > 0) {
+                const views = data[0].playCount || data[0].stats?.playCount || 0;
+                return Number(views);
+            }
+        }
+
+        // --- YOUTUBE ---
+        if (platform === 'YouTube' && YT_KEY) {
+            const vidId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
+            if (vidId) {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`);
+                const d = await res.json();
+                const views = d.items?.[0]?.statistics?.viewCount || 0;
+                return Number(views);
+            }
+        }
+
+        // --- TELEGRAM ---
+        if (TG_LIST.includes(platform) || url.includes('t.me/')) {
+            let sUrl = url.trim().replace('t.me/', 't.me/s/');
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
+            const json = await res.json();
+            const m = json.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
+            if (m) {
+                let t = m[1].toUpperCase();
+                if (t.includes('K')) return parseFloat(t) * 1000;
+                if (t.includes('M')) return parseFloat(t) * 1000000;
+                return parseInt(t.replace(/\D/g, '')) || 0;
+            }
+        }
+
+    } catch (e) {
+        console.error("Fetch Stat Error:", e);
+    }
+    return 0;
+}
 
         async function updateAllMonthStats() {
             const btn = document.getElementById('btnUpdateAll'); btn.innerText = "..."; btn.disabled = true;

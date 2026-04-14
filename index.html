@@ -412,14 +412,16 @@
     const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
     
     // Вспомогательная функция для запроса к Apify
-    const callApify = async (actor, input) => {
+    const callApify = async (actorId, input) => {
         try {
-            const response = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
+            const response = await fetch(`https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(input)
             });
-            return await response.json();
+            const result = await response.json();
+            console.log(`Debug [${platform}]:`, result); // Проверка ответа в консоли
+            return result;
         } catch (e) {
             console.error(`Apify fetch error [${platform}]:`, e);
             return null;
@@ -427,20 +429,29 @@
     };
 
     try {
-        // --- INSTAGRAM (Posts & Reels) ---
+        // --- TIKTOK (Возвращаем старый рабочий ID) ---
+        if (platform === 'TikTok' && AP_TOKEN) {
+            const data = await callApify("GdWCkxBtKWOsKjdch", { 
+                "postURLs": [url] 
+            });
+            if (data && data.length > 0) {
+                // Тикток часто отдает в playCount
+                const views = data[0].playCount || data[0].stats?.playCount || 0;
+                return Number(views);
+            }
+        }
+
+        // --- INSTAGRAM (Reels & Posts) ---
         if (platform === 'Instagram' && AP_TOKEN) {
-            // Используем мощный универсальный скрапер
             const data = await callApify("apify/instagram-scraper", {
                 "directUrls": [url],
                 "resultsLimit": 1,
                 "proxyConfiguration": { "useApifyProxy": true } 
             });
-
             if (data && data.length > 0) {
                 const item = data[0];
-                // Проверяем все возможные варианты названий полей просмотров
+                // Как вы и просили: ищем videoViewCount в первую очередь
                 const views = item.videoViewCount || item.videoPlayCount || item.displayViewCount || item.playsCount || 0;
-                console.log(`Instagram Data for ${url}:`, views); // Увидите результат в консоли
                 return Number(views);
             }
         }
@@ -448,23 +459,11 @@
         // --- VK ---
         if (platform === 'VK' && AP_TOKEN) {
             const data = await callApify("apify/vkontakte-scraper", { 
-                startUrls: [{ url: url }], 
-                maxItems: 1 
+                "startUrls": [{ "url": url }], 
+                "maxItems": 1 
             });
             if (data && data.length > 0) {
                 const views = data[0].viewsCount || data[0].views?.count || 0;
-                return Number(views);
-            }
-        }
-
-        // --- TIKTOK ---
-        if (platform === 'TikTok' && AP_TOKEN) {
-            const data = await callApify("clockworks/tiktok-scraper", { 
-                postURLs: [url], 
-                maxMessages: 1 
-            });
-            if (data && data.length > 0) {
-                const views = data[0].playCount || data[0].stats?.playCount || 0;
                 return Number(views);
             }
         }

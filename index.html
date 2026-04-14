@@ -407,96 +407,57 @@
             });
         }
 
-        async function fetchSingleStat(url, platform) {
-    if (!url || url.length < 10) return 0;
-    const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
-    
-    // Вспомогательная функция для запроса к Apify
-    const callApify = async (actorId, input) => {
-        try {
-            const response = await fetch(`https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${AP_TOKEN}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(input)
-            });
-            const result = await response.json();
-            console.log(`Debug [${platform}]:`, result); // Проверка ответа в консоли
-            return result;
-        } catch (e) {
-            console.error(`Apify fetch error [${platform}]:`, e);
-            return null;
-        }
-    };
+        async function updateAllMonthStats() {
+    console.log("--- СТАРТ ОБНОВЛЕНИЯ СТАТИСТИКИ ---");
+    const btn = document.getElementById('btnUpdateAll');
+    btn.innerText = "..."; btn.disabled = true;
 
-    try {
-        // --- TIKTOK (Возвращаем старый рабочий ID) ---
-        if (platform === 'TikTok' && AP_TOKEN) {
-            const data = await callApify("GdWCkxBtKWOsKjdch", { 
-                "postURLs": [url] 
-            });
-            if (data && data.length > 0) {
-                // Тикток часто отдает в playCount
-                const views = data[0].playCount || data[0].stats?.playCount || 0;
-                return Number(views);
+    // Фильтруем задачи только за ВЫБРАННЫЙ в статистике месяц
+    const tasks = contentData.filter(t => 
+        t.status === 'published' && 
+        t.links && 
+        Object.keys(t.links).length > 0 &&
+        new Date(t.date).getMonth() === statsDate.getMonth() &&
+        new Date(t.date).getFullYear() === statsDate.getFullYear()
+    );
+
+    console.log(`Найдено задач для обновления: ${tasks.length}`);
+
+    for (let t of tasks) {
+        console.log(`Обработка задачи: "${t.title}" (ID: ${t.id})`);
+        let sum = 0;
+        let pCounts = t.play_counts || {};
+
+        for (let [p, url] of Object.entries(t.links)) {
+            if (url && url.length > 5) {
+                console.log(`Запрос статы для ${p}: ${url}`);
+                const v = await fetchSingleStat(url, p);
+                console.log(`Результат для ${p}: ${v}`);
+                pCounts[p] = Number(v) || 0;
+                sum += (Number(v) || 0);
             }
         }
 
-        // --- INSTAGRAM (Reels & Posts) ---
-        if (platform === 'Instagram' && AP_TOKEN) {
-            const data = await callApify("apify/instagram-scraper", {
-                "directUrls": [url],
-                "resultsLimit": 1,
-                "proxyConfiguration": { "useApifyProxy": true } 
-            });
-            if (data && data.length > 0) {
-                const item = data[0];
-                // Как вы и просили: ищем videoViewCount в первую очередь
-                const views = item.videoViewCount || item.videoPlayCount || item.displayViewCount || item.playsCount || 0;
-                return Number(views);
-            }
-        }
+        console.log(`Итоговая сумма для задачи: ${sum}. Сохранение в БД...`);
 
-        // --- VK ---
-        if (platform === 'VK' && AP_TOKEN) {
-            const data = await callApify("apify/vkontakte-scraper", { 
-                "startUrls": [{ "url": url }], 
-                "maxItems": 1 
-            });
-            if (data && data.length > 0) {
-                const views = data[0].viewsCount || data[0].views?.count || 0;
-                return Number(views);
-            }
-        }
+        // СОХРАНЕНИЕ В SUPABASE
+        const { data, error } = await _supabase
+            .from('tasks')
+            .update({ play_counts: pCounts, play_count: sum })
+            .eq('id', t.id)
+            .select();
 
-        // --- YOUTUBE ---
-        if (platform === 'YouTube' && YT_KEY) {
-            const vidId = (url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/)||[])[2];
-            if (vidId) {
-                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${vidId}&key=${YT_KEY}`);
-                const d = await res.json();
-                const views = d.items?.[0]?.statistics?.viewCount || 0;
-                return Number(views);
-            }
+        if (error) {
+            console.error("Ошибка сохранения в Supabase:", error);
+        } else {
+            console.log("Данные успешно сохранены в базу:", data);
         }
-
-        // --- TELEGRAM ---
-        if (TG_LIST.includes(platform) || url.includes('t.me/')) {
-            let sUrl = url.trim().replace('t.me/', 't.me/s/');
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(sUrl)}`);
-            const json = await res.json();
-            const m = json.contents.match(/class="tgme_widget_message_views">([\d.KM]+)</i);
-            if (m) {
-                let t = m[1].toUpperCase();
-                if (t.includes('K')) return parseFloat(t) * 1000;
-                if (t.includes('M')) return parseFloat(t) * 1000000;
-                return parseInt(t.replace(/\D/g, '')) || 0;
-            }
-        }
-
-    } catch (e) {
-        console.error("Fetch Stat Error:", e);
     }
-    return 0;
+
+    console.log("--- ОБНОВЛЕНИЕ ЗАВЕРШЕНО ---");
+    await loadAllData();
+    btn.innerText = "ОБНОВИТЬ"; btn.disabled = false;
+    alert("Готово! Проверьте консоль F12, если цифры не изменились.");
 }
 
         async function updateAllMonthStats() {

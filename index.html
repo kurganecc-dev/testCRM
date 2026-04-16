@@ -8,6 +8,52 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* НОВЫЕ АНИМАЦИИ */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalBounce {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulseBorder {
+    0% { border-color: rgba(59, 130, 246, 0.5); }
+    50% { border-color: rgba(59, 130, 246, 1); }
+    100% { border-color: rgba(59, 130, 246, 0.5); }
+}
+
+.view-animate {
+    animation: slideUpFade 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.modal-animate {
+    animation: modalBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Эффект для карточек */
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Стили для перетаскивания в Канбане */
+.kanban-col.drag-over {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border: 2px solid #3b82f6 !important;
+    animation: pulseBorder 1.5s infinite;
+}
+
+/* Плавный скролл */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: all 0.3s; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; font-size: 13px; scroll-behavior: smooth; }
         .status-idea { border-left: 5px solid #9ca3af; }
@@ -801,42 +847,42 @@ if (oldTask && oldTask.status !== newStatus) {
                 </a>
             `).join('');
         }
-       function switchView(v) {
+     function switchView(v) {
     currentView = v;
     
-    // Элементы разметки
     const middlePanel = document.getElementById('middlePanel');
     const rightSidebar = document.getElementById('rightSidebar');
     const listControls = document.getElementById('listControls');
 
-    // 1. Управляем шириной колонок
+    // Переключение колонок
     if (v === 'kanban') {
-        // Скрываем правую панель и расширяем центральную
         rightSidebar.classList.add('hidden');
-        middlePanel.classList.remove('lg:col-span-6');
-        middlePanel.classList.add('lg:col-span-9'); // Теперь занимает 9 колонок (вместе с левой формой)
+        middlePanel.classList.replace('lg:col-span-6', 'lg:col-span-9');
     } else {
-        // Возвращаем как было
         rightSidebar.classList.remove('hidden');
-        middlePanel.classList.remove('lg:col-span-9');
-        middlePanel.classList.add('lg:col-span-6');
+        middlePanel.classList.replace('lg:col-span-9', 'lg:col-span-6');
     }
 
-    // 2. Управляем видимостью вкладок (List, Kanban, Calendar и т.д.)
+    // Логика видимости с анимацией
     const views = ['list', 'calendar', 'stats', 'charts', 'accounts', 'kanban'];
     views.forEach(id => {
         const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
         const viewEl = document.getElementById('view-' + id);
-        if(viewEl) viewEl.classList.toggle('hidden', id !== v);
+        
+        if(viewEl) {
+            if (id === v) {
+                viewEl.classList.remove('hidden');
+                viewEl.classList.add('view-animate'); // Добавляем класс анимации
+            } else {
+                viewEl.classList.add('hidden');
+                viewEl.classList.remove('view-animate');
+            }
+        }
         if(btn) btn.classList.toggle('tab-active', id === v);
     });
 
-    // Показываем поиск только в Списке и Канбане
-    if (listControls) {
-        listControls.classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
-    }
-
-    if(v === 'kanban') renderKanban();
+    if (listControls) listControls.classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
+    
     renderAll();
 }
 

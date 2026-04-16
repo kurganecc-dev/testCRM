@@ -26,6 +26,65 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .social-icon { width: 18px; height: 18px; display: inline-block; vertical-align: middle; }
+        /* ТЕМЫ */
+body.theme-dark {
+    background-color: #0f172a !important; /* slate-900 */
+    color: #f1f5f9 !important;
+}
+
+body.theme-dark .bg-white, 
+body.theme-dark header, 
+body.theme-dark #listControls input, 
+body.theme-dark #listControls select,
+body.theme-dark .calendar-day {
+    background-color: #1e293b !important; /* slate-800 */
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+
+body.theme-dark .text-slate-900, 
+body.theme-dark .text-slate-800,
+body.theme-dark h1, body.theme-dark h2, body.theme-dark h3 {
+    color: #f1f5f9 !important;
+}
+
+body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
+    background-color: #0f172a !important;
+    color: white !important;
+    border-color: #334155 !important;
+}
+
+/* РОЗОВАЯ ТЕМА */
+body.theme-pink {
+    background-color: #fff1f2 !important; /* rose-50 */
+    color: #881337 !important;
+}
+
+body.theme-pink .bg-white, 
+body.theme-pink header,
+body.theme-pink #listControls input, 
+body.theme-pink #listControls select,
+body.theme-pink .calendar-day {
+    background-color: #ffffff !important;
+    color: #881337 !important;
+    border-color: #fecdd3 !important;
+}
+
+body.theme-pink .bg-slate-900 {
+    background-color: #fb7185 !important; /* rose-400 */
+}
+
+body.theme-pink .text-blue-600, body.theme-pink .text-blue-500 {
+    color: #e11d48 !important; /* rose-600 */
+}
+
+body.theme-pink .bg-blue-600 {
+    background-color: #e11d48 !important;
+}
+
+body.theme-pink .status-published {
+    border-left-color: #f43f5e !important;
+}
     </style>
 </head>
 <body class="bg-[#f1f5f9] min-h-screen text-slate-900 font-medium">
@@ -79,8 +138,18 @@
                 <div class="flex gap-4 items-center">
                     <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm hover:bg-slate-100">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
                     <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
-                    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline transition">Выход</button>
-                </div>
+                    <div class="flex gap-4 items-center">
+    <!-- Выбор темы -->
+    <select id="themeSelect" onchange="changeTheme(this.value)" class="text-[9px] font-black uppercase bg-slate-100 p-2 rounded-xl border-none outline-none cursor-pointer">
+        <option value="light">☀️ Светлая</option>
+        <option value="dark">🌙 Темная</option>
+        <option value="pink">🌸 Розовая</option>
+    </select>
+    
+    <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm hover:bg-slate-100">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
+    <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
+    <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline transition">Выход</button>
+</div>
             </div>
         </header>
 
@@ -307,6 +376,7 @@
                 document.getElementById('appContent').classList.remove('hidden');
                 document.getElementById('currentUserDisplay').innerText = `👤 ${name}`;
                 if (role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+                applySavedTheme(); 
                 initUI();
                 await loadAllData(); 
                 setupChat();
@@ -348,7 +418,28 @@
     
     renderCharts();
 }
+function changeTheme(theme) {
+    // Удаляем старые классы тем
+    document.body.classList.remove('theme-dark', 'theme-pink');
+    
+    // Добавляем новую, если она не светлая
+    if (theme !== 'light') {
+        document.body.classList.add('theme-' + theme);
+    }
+    
+    // Сохраняем в настройки пользователя
+    localStorage.setItem('andromeda_theme', theme);
+    
+    // Перерисовываем графики, чтобы они подстроились под фон (опционально)
+    if (currentView === 'charts') renderCharts();
+}
 
+// Вызывать эту функцию при загрузке (внутри checkAuth)
+function applySavedTheme() {
+    const savedTheme = localStorage.getItem('andromeda_theme') || 'light';
+    document.getElementById('themeSelect').value = savedTheme;
+    changeTheme(savedTheme);
+}
 function renderCharts() {
     const canvas = document.getElementById('reachChart');
     if (!canvas) return;

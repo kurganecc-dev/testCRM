@@ -251,7 +251,7 @@ body.theme-pink .status-published {
             </aside>
 
             <!-- MIDDLE / RIGHT PANELS (Без изменений структуры) -->
-            <div class="lg:col-span-6 space-y-6">
+           <div id="middlePanel" class="lg:col-span-6 space-y-6 transition-all duration-300">
                 <div id="listControls" class="flex flex-col md:flex-row gap-4">
                     <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white text-slate-800">
                     <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer text-slate-800">
@@ -274,23 +274,34 @@ body.theme-pink .status-published {
                     </div>
                 </div>
 <div id="view-kanban" class="hidden overflow-x-auto pb-4">
-    <div class="flex gap-6 min-w-[1200px] h-[calc(100vh-250px)]">
-        <!-- Столбцы генерируются через JS -->
-        <div id="kanban-idea" class="flex-1 flex flex-col min-w-[300px]">
-            <h3 class="flex justify-between items-center mb-4 px-4 py-2 bg-slate-200/50 rounded-xl font-black text-[10px] uppercase text-slate-500">💡 Идеи <span class="count bg-slate-300 text-white px-2 rounded-full">0</span></h3>
-            <div class="kanban-col flex-1 space-y-4 overflow-y-auto p-2 rounded-2xl bg-slate-50/50 border-2 border-dashed border-slate-200/50" ondrop="drop(event, 'idea')" ondragover="allowDrop(event)"></div>
+    <div class="flex gap-4 min-w-[1000px] h-[calc(100vh-200px)]">
+        <!-- IDEA -->
+        <div id="kanban-idea" class="flex-1 flex flex-col">
+            <h3 class="flex justify-between items-center mb-3 px-4 py-2 bg-white rounded-xl font-black text-[9px] uppercase text-slate-500 shadow-sm border">
+                💡 Идеи <span class="count bg-slate-200 text-slate-600 px-2 rounded-full">0</span>
+            </h3>
+            <div class="kanban-col flex-1 space-y-3 overflow-y-auto p-2 rounded-2xl bg-slate-200/30 border-2 border-dashed border-slate-300/50" ondrop="drop(event, 'idea')" ondragover="allowDrop(event)"></div>
         </div>
-        <div id="kanban-work" class="flex-1 flex flex-col min-w-[300px]">
-            <h3 class="flex justify-between items-center mb-4 px-4 py-2 bg-blue-100 rounded-xl font-black text-[10px] uppercase text-blue-600">🛠️ В работе <span class="count bg-blue-500 text-white px-2 rounded-full">0</span></h3>
-            <div class="kanban-col flex-1 space-y-4 overflow-y-auto p-2 rounded-2xl bg-blue-50/30 border-2 border-dashed border-blue-100" ondrop="drop(event, 'work')" ondragover="allowDrop(event)"></div>
+        <!-- WORK -->
+        <div id="kanban-work" class="flex-1 flex flex-col">
+            <h3 class="flex justify-between items-center mb-3 px-4 py-2 bg-blue-600 rounded-xl font-black text-[9px] uppercase text-white shadow-lg">
+                🛠️ В работе <span class="count bg-blue-400 text-white px-2 rounded-full">0</span>
+            </h3>
+            <div class="kanban-col flex-1 space-y-3 overflow-y-auto p-2 rounded-2xl bg-blue-50/50 border-2 border-dashed border-blue-200" ondrop="drop(event, 'work')" ondragover="allowDrop(event)"></div>
         </div>
-        <div id="kanban-ready" class="flex-1 flex flex-col min-w-[300px]">
-            <h3 class="flex justify-between items-center mb-4 px-4 py-2 bg-emerald-100 rounded-xl font-black text-[10px] uppercase text-emerald-600">✅ Готово <span class="count bg-emerald-500 text-white px-2 rounded-full">0</span></h3>
-            <div class="kanban-col flex-1 space-y-4 overflow-y-auto p-2 rounded-2xl bg-emerald-50/30 border-2 border-dashed border-emerald-100" ondrop="drop(event, 'ready')" ondragover="allowDrop(event)"></div>
+        <!-- READY -->
+        <div id="kanban-ready" class="flex-1 flex flex-col">
+            <h3 class="flex justify-between items-center mb-3 px-4 py-2 bg-emerald-500 rounded-xl font-black text-[9px] uppercase text-white shadow-lg">
+                ✅ Готово <span class="count bg-emerald-400 text-white px-2 rounded-full">0</span>
+            </h3>
+            <div class="kanban-col flex-1 space-y-3 overflow-y-auto p-2 rounded-2xl bg-emerald-50/50 border-2 border-dashed border-emerald-200" ondrop="drop(event, 'ready')" ondragover="allowDrop(event)"></div>
         </div>
-        <div id="kanban-published" class="flex-1 flex flex-col min-w-[300px]">
-            <h3 class="flex justify-between items-center mb-4 px-4 py-2 bg-indigo-100 rounded-xl font-black text-[10px] uppercase text-indigo-600">🚀 Опубликовано <span class="count bg-indigo-500 text-white px-2 rounded-full">0</span></h3>
-            <div class="kanban-col flex-1 space-y-4 overflow-y-auto p-2 rounded-2xl bg-indigo-50/30 border-2 border-dashed border-indigo-100" ondrop="drop(event, 'published')" ondragover="allowDrop(event)"></div>
+        <!-- PUBLISHED -->
+        <div id="kanban-published" class="flex-1 flex flex-col">
+            <h3 class="flex justify-between items-center mb-3 px-4 py-2 bg-slate-900 rounded-xl font-black text-[9px] uppercase text-white shadow-lg">
+                🚀 Опубликовано <span class="count bg-slate-600 text-white px-2 rounded-full">0</span>
+            </h3>
+            <div class="kanban-col flex-1 space-y-3 overflow-y-auto p-2 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300" ondrop="drop(event, 'published')" ondragover="allowDrop(event)"></div>
         </div>
     </div>
 </div>
@@ -342,7 +353,7 @@ body.theme-pink .status-published {
                 <div id="view-accounts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <aside class="lg:col-span-3 space-y-6 text-slate-200">
+          <aside id="rightSidebar" class="lg:col-span-3 space-y-6 text-slate-200 transition-all duration-300">
                 <div class="bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl min-h-[200px]">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6 border-b border-slate-800 pb-4">Мои задачи в работе</h3>
                     <div id="personalTasksList" class="space-y-4 max-h-[300px] overflow-y-auto pr-1"></div>
@@ -790,20 +801,112 @@ if (oldTask && oldTask.status !== newStatus) {
                 </a>
             `).join('');
         }
-        function switchView(v) {
+       function switchView(v) {
     currentView = v;
+    
+    // Элементы разметки
+    const middlePanel = document.getElementById('middlePanel');
+    const rightSidebar = document.getElementById('rightSidebar');
+    const listControls = document.getElementById('listControls');
+
+    // 1. Управляем шириной колонок
+    if (v === 'kanban') {
+        // Скрываем правую панель и расширяем центральную
+        rightSidebar.classList.add('hidden');
+        middlePanel.classList.remove('lg:col-span-6');
+        middlePanel.classList.add('lg:col-span-9'); // Теперь занимает 9 колонок (вместе с левой формой)
+    } else {
+        // Возвращаем как было
+        rightSidebar.classList.remove('hidden');
+        middlePanel.classList.remove('lg:col-span-9');
+        middlePanel.classList.add('lg:col-span-6');
+    }
+
+    // 2. Управляем видимостью вкладок (List, Kanban, Calendar и т.д.)
     const views = ['list', 'calendar', 'stats', 'charts', 'accounts', 'kanban'];
     views.forEach(id => {
         const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
-        const view = document.getElementById('view-' + id);
-        if(view) view.classList.toggle('hidden', id !== v);
+        const viewEl = document.getElementById('view-' + id);
+        if(viewEl) viewEl.classList.toggle('hidden', id !== v);
         if(btn) btn.classList.toggle('tab-active', id === v);
     });
-    
-    document.getElementById('listControls').classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
+
+    // Показываем поиск только в Списке и Канбане
+    if (listControls) {
+        listControls.classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
+    }
+
     if(v === 'kanban') renderKanban();
     renderAll();
 }
+
+// --- ФУНКЦИИ КАНБАНА ---
+
+function renderKanban() {
+    const query = (document.getElementById('taskSearch').value || "").toLowerCase();
+    const tagF = document.getElementById('tagFilter').value;
+    const statuses = ['idea', 'work', 'ready', 'published'];
+    
+    statuses.forEach(status => {
+        const col = document.querySelector(`#kanban-${status} .kanban-col`);
+        const countBadge = document.querySelector(`#kanban-${status} .count`);
+        if (!col) return;
+        
+        col.innerHTML = '';
+        const filtered = contentData.filter(i => 
+            i.status === status && 
+            i.title.toLowerCase().includes(query) && 
+            (tagF === 'ALL' || i.tag === tagF)
+        );
+        
+        countBadge.innerText = filtered.length;
+
+        filtered.forEach(task => {
+            const card = document.createElement('div');
+            card.draggable = true;
+            card.ondragstart = (e) => {
+                e.dataTransfer.setData("text", task.id);
+                card.classList.add('opacity-50');
+            };
+            card.ondragend = () => card.classList.remove('opacity-50');
+            card.onclick = () => openEditModal(task.id);
+            
+            card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all border-l-4 " + 
+                            (status === 'idea' ? 'border-l-slate-400' : status === 'work' ? 'border-l-blue-500' : status === 'ready' ? 'border-l-emerald-500' : 'border-l-indigo-500');
+            
+            card.innerHTML = `
+                <div class="flex flex-wrap gap-1 mb-2">
+                    ${(task.channels || []).slice(0, 3).map(c => `<span class="bg-slate-900 text-white text-[7px] px-1.5 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
+                </div>
+                <h4 class="text-[11px] font-black uppercase leading-tight mb-3 text-slate-800 theme-dark:text-white">${task.title}</h4>
+                <div class="flex justify-between items-center text-[8px] font-bold text-slate-400 border-t pt-2">
+                    <span class="truncate max-w-[60px]">👤 ${task.responsible.split(' ')[0]}</span>
+                    <span class="${new Date(task.date) < new Date() && status !== 'published' ? 'text-rose-500 font-black' : ''}">
+                        📅 ${new Date(task.date).toLocaleDateString('ru-RU', {day:'numeric', month:'short'})}
+                    </span>
+                </div>
+            `;
+            col.appendChild(card);
+        });
+    });
+}
+
+// Drag & Drop функции (теперь глобальные)
+window.allowDrop = function(ev) { ev.preventDefault(); };
+window.drop = async function(ev, newStatus) {
+    ev.preventDefault();
+    const taskId = ev.dataTransfer.getData("text");
+    const task = contentData.find(t => String(t.id) === String(taskId));
+    
+    if (task && task.status !== newStatus) {
+        const oldStatus = task.status;
+        task.status = newStatus; // Мгновенно обновляем локально для скорости
+        renderKanban(); 
+        
+        await _supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+        await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
+    }
+};
 
 // ОБНОВЛЕННАЯ функция renderAll
 function renderAll() { 

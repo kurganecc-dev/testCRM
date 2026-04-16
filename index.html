@@ -638,6 +638,10 @@ body.theme-pink .status-published {
             renderCalendarTabs();
             renderAccounts();
         }
+        const editChanContainer = document.getElementById('editChannelList');
+    if (editChanContainer) {
+        editChanContainer.addEventListener('change', () => updateEditLinkFields());
+    }
 document.getElementById('start_date_val').addEventListener('change', function() {
     const startDate = this.value;
     const endDateInput = document.getElementById('date_val');
@@ -646,6 +650,7 @@ document.getElementById('start_date_val').addEventListener('change', function() 
     if (endDateInput.value && endDateInput.value < startDate) {
         endDateInput.value = startDate; // Сбрасываем дедлайн на дату старта, если он стал некорректным
     }
+     document.getElementById('edit_status').innerHTML = ...
 });
         function switchChartMode(mode) {
             chartMode = mode;
@@ -860,20 +865,67 @@ document.getElementById('start_date_val').addEventListener('change', function() 
                 await loadAllData(); 
             } 
         }
+function updateEditLinkFields(existingLinks = null) {
+    const container = document.getElementById('multiLinkContainer');
+    
+    // Если существующие ссылки не переданы, собираем то, что сейчас введено в поля (чтобы не затереть при клике)
+    const currentValues = existingLinks || {};
+    if (!existingLinks) {
+        document.querySelectorAll('.multi-link-input').forEach(input => {
+            currentValues[input.dataset.platform] = input.value;
+        });
+    }
 
-        function openEditModal(id) {
-            const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
-            document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
-            document.getElementById('edit_work_type').value = i.work_type || 'Пост'; document.getElementById('edit_tag').value = i.tag || 'прочее';
-            document.getElementById('edit_description').value = i.description || ''; document.getElementById('edit_status').value = i.status;
-            document.getElementById('edit_start_date').value = i.start_date; document.getElementById('edit_date').value = i.date;
-            document.querySelectorAll('input[name="edit_chan"]').forEach(cb => { cb.checked = i.channels ? i.channels.includes(cb.value) : false; });
-            document.querySelectorAll('input[name="edit_exec"]').forEach(cb => { cb.checked = i.executors ? i.executors.includes(cb.value) : false; });
-            const container = document.getElementById('multiLinkContainer'); container.innerHTML = '';
-            (i.channels || []).forEach(ch => { const val = (i.links && i.links[ch]) ? i.links[ch] : ''; container.innerHTML += `<div><label class="text-[7px] text-slate-400 block font-black mb-1 uppercase flex items-center gap-2">${getSocialIcon(ch)} ${ch}</label><input type="url" data-platform="${ch}" value="${val}" class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100 text-slate-800"></div>`; });
-            document.getElementById('editModal').style.display = 'flex';
-        }
+    // Получаем список только выбранных площадок
+    const selectedChannels = Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value);
 
+    // Генерируем HTML
+    container.innerHTML = selectedChannels.map(ch => {
+        const val = currentValues[ch] || '';
+        return `
+            <div class="view-animate">
+                <label class="text-[7px] text-slate-400 block font-black mb-1 uppercase flex items-center gap-2">
+                    ${getSocialIcon(ch)} ${ch}
+                </label>
+                <input type="url" 
+                       data-platform="${ch}" 
+                       value="${val}" 
+                       class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100 text-slate-800 focus:border-emerald-400 transition-colors">
+            </div>`;
+    }).join('');
+
+    if (selectedChannels.length === 0) {
+        container.innerHTML = '<p class="text-[8px] text-slate-400 italic">Выберите площадки выше, чтобы добавить ссылки</p>';
+    }
+}
+       function openEditModal(id) {
+    const i = contentData.find(x => String(x.id) === String(id)); 
+    if(!i) return;
+
+    document.getElementById('edit_id').value = i.id; 
+    document.getElementById('edit_title').value = i.title;
+    document.getElementById('edit_work_type').value = i.work_type || 'Пост'; 
+    document.getElementById('edit_tag').value = i.tag || 'прочее';
+    document.getElementById('edit_description').value = i.description || ''; 
+    document.getElementById('edit_status').value = i.status;
+    document.getElementById('edit_start_date').value = i.start_date; 
+    document.getElementById('edit_date').value = i.date;
+
+    // Устанавливаем чекбоксы площадок
+    document.querySelectorAll('input[name="edit_chan"]').forEach(cb => { 
+        cb.checked = i.channels ? i.channels.includes(cb.value) : false; 
+    });
+
+    // Устанавливаем чекбоксы исполнителей
+    document.querySelectorAll('input[name="edit_exec"]').forEach(cb => { 
+        cb.checked = i.executors ? i.executors.includes(cb.value) : false; 
+    });
+
+    // Отрисовываем поля ссылок, передавая существующие ссылки из базы
+    updateEditLinkFields(i.links || {});
+
+    document.getElementById('editModal').style.display = 'flex';
+}
         document.getElementById('editForm').onsubmit = async (e) => {
             e.preventDefault(); const id = document.getElementById('edit_id').value, links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
             await _supabase.from('tasks').update({ title: document.getElementById('edit_title').value, work_type: document.getElementById('edit_work_type').value, tag: document.getElementById('edit_tag').value, description: document.getElementById('edit_description').value, status: document.getElementById('edit_status').value, start_date: document.getElementById('edit_start_date').value, date: document.getElementById('edit_date').value, channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), links: links }).eq('id', id);

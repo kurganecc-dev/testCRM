@@ -471,7 +471,29 @@ body.theme-pink .status-published {
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ОБНОВЛЕННЫЙ СПИСОК КОМАНДЫ (Татьяна Петрова добавлена)
-        const TEAM = [{ name: "Андрей Чебыкин", color: "#2563eb" }, { name: "Павел Храмцов", color: "#16a34a" }, { name: "Дмитрий Хандюков", color: "#4f46e5" }, { name: "Олеся Подъелец", color: "#e11d48" }, { name: "Татьяна Петрова", color: "#d97706" }, { name: "Яна Толкаченко", color: "#9333ea" }, { name: "Ксения Потапенкова", color: "#db2777" }, { name: "Олег Сытов", color: "#0891b2" }, { name: "Любовь Карелина", color: "#ea580c" }, { name: "Арина Краснова", color: "#0d9488" }, { name: "Евгения Щитова", color: "#10b981" }, { name: "Анастасия Ершова", color: "#6366f1" }, { name: "Вячеслав Александров", color: "#8b5cf6" }];
+        // ОБНОВЛЕННЫЙ СОСТАВ КОМАНДЫ ПО ОТДЕЛАМ
+const DEPARTMENTS = {
+    "Продакшн": ["Дмитрий Хандюков", "Андрей Чебыкин", "Павел Храмцов"],
+    "Бренд": ["Вячеслав Александров", "Татьяна Петрова"],
+    "Коммуникации": ["Яна Толкаченко", "Олеся Подъелец", "Ксения Потапенкова", "Евгения Щитова", "Анастасия Ершова", "Арина Краснова"],
+    "Другие": ["Любовь Карелина", "Олег Сытов"] // Те, кто был в списке, но не указан в отделах
+};
+
+// Плоский список для совместимости с другими функциями
+const TEAM = [
+    { name: "Андрей Чебыкин", color: "#2563eb" }, 
+    { name: "Павел Храмцов", color: "#16a34a" }, 
+    { name: "Дмитрий Хандюков", color: "#4f46e5" }, 
+    { name: "Олеся Подъелец", color: "#e11d48" }, 
+    { name: "Татьяна Петрова", color: "#d97706" }, 
+    { name: "Яна Толкаченко", color: "#9333ea" }, 
+    { name: "Ксения Потапенкова", color: "#db2777" }, 
+    { name: "Олег Сытов", color: "#0891b2" }, 
+    { name: "Любовь Карелина", color: "#ea580c" }, 
+    { name: "Арина Краснова", color: "#0d9488" }, 
+    { name: "Евгения Щитова", color: "#10b981" }, 
+    { name: "Анастасия Ершова", color: "#6366f1" }, 
+    { name: "Вячеслав Александров", color: "#8b5cf6" }];
         const CHANNELS = ["YouTube", "TikTok", "Instagram", "VK", "Этажи SMM", "NewsRoom", "Echat", "Max", "ОК"];
         const TG_LIST = ["Этажи SMM", "NewsRoom", "Echat", "Max"];
         const WORK_ACCOUNTS = [
@@ -586,10 +608,42 @@ async function renderLogs() {
         }
 
         function initUI() {
-            const fill = (id, name, list) => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${typeof i === 'string' ? i : i.name}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${typeof i === 'string' ? i : i.name}</span></label>`).join('');
-            };
+    // Вспомогательная функция для простых списков (каналы)
+    const fill = (id, name, list) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${i}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${i}</span></label>`).join('');
+    };
+
+    // Специальная функция для исполнителей с группировкой по отделам
+    const fillExecutors = (id, name) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let html = '';
+        for (const [dept, members] of Object.entries(DEPARTMENTS)) {
+            html += `<div class="text-[7px] font-black text-blue-500 mb-1 mt-3 first:mt-0 px-1 border-b border-slate-100 uppercase tracking-widest">${dept}</div>`;
+            members.forEach(memberName => {
+                html += `
+                    <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition">
+                        <input type="checkbox" name="${name}" value="${memberName}" class="rounded text-blue-600 scale-90"> 
+                        <span class="text-[9px] font-black uppercase text-slate-600">${memberName}</span>
+                    </label>`;
+            });
+        }
+        el.innerHTML = html;
+    };
+
+    // Заполняем каналы
+    fill('channelList', 'chan', CHANNELS); 
+    fill('editChannelList', 'edit_chan', CHANNELS);
+    
+    // Заполняем исполнителей с категориями
+    fillExecutors('executorList', 'exec'); 
+    fillExecutors('editExecList', 'edit_exec');
+
+    document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
+    renderCalendarTabs();
+    renderAccounts();
+}
             fill('channelList', 'chan', CHANNELS); fill('editChannelList', 'edit_chan', CHANNELS);
             fill('executorList', 'exec', TEAM); fill('editExecList', 'edit_exec', TEAM);
             document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');

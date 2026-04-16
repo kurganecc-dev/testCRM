@@ -460,15 +460,63 @@ function renderCharts() {
             document.getElementById('statsTableContainer').innerHTML = html + `</tbody></table>`;
         }
         function renderAll() { if (currentView === 'list') renderCards(); if (currentView === 'calendar') renderCalendar(); if (currentView === 'stats') renderStats(); if (currentView === 'charts') renderCharts(); document.getElementById('trashBadge').innerText = trashData.length; renderPersonalTasks(); }
-        function renderCards() {
-            const query = (document.getElementById('taskSearch').value || "").toLowerCase(), tagF = document.getElementById('tagFilter').value, container = document.getElementById('view-list'); if(!container) return; container.innerHTML = '';
-            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(i => {
-                const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
-                div.className = `bg-white p-6 rounded-[2rem] border-2 border-slate-50 status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-md`;
-                div.innerHTML = `<div class="flex justify-between mb-4"><div class="flex flex-wrap gap-1">${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}</div><div class="flex gap-2"><button onclick="openEditModal('${i.id}')" class="text-slate-300 hover:text-blue-500">✏️</button><button onclick="moveToTrash('${i.id}')" class="text-slate-300 hover:text-rose-500">✕</button></div></div><div class="flex items-center gap-2 mb-1"><span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span><div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div></div><h3 class="font-black text-xs uppercase mb-3 leading-tight text-slate-800">${i.title}</h3><div class="text-[8px] font-bold text-slate-400 mt-auto border-t pt-3 flex justify-between items-center"><span>${i.responsible}</span><span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded">👁️ ${Number(i.play_count || 0).toLocaleString()}</span></div>`;
-                container.appendChild(div);
-            });
-        }
+      function renderCards() {
+    const query = (document.getElementById('taskSearch').value || "").toLowerCase();
+    const tagF = document.getElementById('tagFilter').value;
+    const container = document.getElementById('view-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    contentData
+        .filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF))
+        .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)) // Хронологический порядок
+        .forEach(i => {
+            const div = document.createElement('div');
+            const tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
+            
+            // Добавляем стили кликабельности и hover-эффект
+            div.className = `group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-xl hover:border-blue-200 cursor-pointer relative`;
+            
+            // Нажатие на всю карточку открывает модалку
+            div.onclick = () => openEditModal(i.id);
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-wrap gap-1 max-w-[80%]">
+                        ${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
+                    </div>
+                    
+                    <!-- Кнопка удаления с защитой от срабатывания клика по карточке -->
+                    <button onclick="event.stopPropagation(); moveToTrash('${i.id}')" 
+                            class="p-2 -mr-2 -mt-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all opacity-0 group-hover:opacity-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span>
+                    <div class="text-[8px] font-black text-blue-500 uppercase tracking-tighter">${i.work_type || 'Пост'}</div>
+                </div>
+
+                <h3 class="font-black text-[13px] uppercase mb-4 leading-tight text-slate-800 group-hover:text-blue-600 transition-colors">
+                    ${i.title}
+                </h3>
+
+                <div class="text-[9px] font-bold text-slate-400 mt-auto border-t border-slate-50 pt-4 flex justify-between items-center">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[7px]">👤</div>
+                        <span>${i.responsible}</span>
+                    </div>
+                    <span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded-lg">
+                        👁️ ${Number(i.play_count || 0).toLocaleString()}
+                    </span>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+}
         async function moveToTrash(id) { await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); await loadAllData(); }
         async function restoreFromTrash(id) { await _supabase.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id); await loadAllData(); }
         async function finalDelete(id) { if(confirm("Навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); } }

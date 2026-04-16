@@ -172,12 +172,20 @@
                     </div>
                     <div id="statsTableContainer" class="bg-white rounded-3xl border overflow-x-auto shadow-sm"></div>
                 </div>
-                <div id="view-charts" class="hidden space-y-6">
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Аналитика охватов (6 мес)</h3>
-                        <div class="relative h-[400px] w-full"><canvas id="reachChart"></canvas></div>
-                    </div>
-                </div>
+              <div id="view-charts" class="hidden space-y-6">
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <h3 id="chartTitle" class="text-xs font-black uppercase tracking-widest text-slate-400">Аналитика охватов</h3>
+            <div class="flex bg-slate-100 p-1 rounded-xl font-black text-[9px] gap-1">
+                <button onclick="switchChartMode('months')" id="btnChartMonths" class="px-3 py-1.5 rounded-lg transition uppercase tab-active">6 месяцев</button>
+                <button onclick="switchChartMode('days')" id="btnChartDays" class="px-3 py-1.5 rounded-lg transition uppercase text-slate-400">По дням (тек. месяц)</button>
+            </div>
+        </div>
+        <div class="relative h-[400px] w-full">
+            <canvas id="reachChart"></canvas>
+        </div>
+    </div>
+</div>
                 <div id="view-accounts" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
@@ -330,45 +338,104 @@
         }
 
         // Остальные функции (renderCharts, renderStats, renderCards и т.д.) остаются прежними
-        function renderCharts() {
-            const canvas = document.getElementById('reachChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const platforms = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
-            const last6Months = [];
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date(); d.setMonth(d.getMonth() - i);
-                last6Months.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleString('ru-RU', { month: 'short' }) });
-            }
-            const datasets = platforms.map(p => {
-                const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
-                const data = last6Months.map(m => {
-                    return contentData
-                        .filter(t => {
-                            const td = new Date(t.date);
-                            return td.getMonth() === m.month && td.getFullYear() === m.year && t.status === 'published';
-                        })
-                        .reduce((sum, t) => {
-                            if (p === 'Telegram') {
-                                let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
-                                return sum + tgSum;
-                            }
-                            return sum + (t.play_counts?.[p] || 0);
-                        }, 0);
-                });
-                return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
-            });
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: last6Months.map(m => m.label), datasets: datasets },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } } },
-                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
-                }
-            });
+        function switchChartMode(mode) {
+    chartMode = mode;
+    // Смена стилей кнопок
+    document.getElementById('btnChartMonths').classList.toggle('tab-active', mode === 'months');
+    document.getElementById('btnChartMonths').classList.toggle('text-slate-400', mode !== 'months');
+    document.getElementById('btnChartDays').classList.toggle('tab-active', mode === 'days');
+    document.getElementById('btnChartDays').classList.toggle('text-slate-400', mode !== 'days');
+    
+    renderCharts();
+}
+
+function renderCharts() {
+    const canvas = document.getElementById('reachChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const platforms = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
+    
+    let labels = [];
+    let datasets = [];
+    const now = new Date();
+
+    if (chartMode === 'months') {
+        // Логика за 6 месяцев (старая)
+        document.getElementById('chartTitle').innerText = "Аналитика охватов (6 мес)";
+        const last6Months = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(); d.setMonth(d.getMonth() - i);
+            last6Months.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleString('ru-RU', { month: 'short' }) });
         }
+        labels = last6Months.map(m => m.label);
+
+        datasets = platforms.map(p => {
+            const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
+            const data = last6Months.map(m => {
+                return contentData
+                    .filter(t => {
+                        const td = new Date(t.date);
+                        return td.getMonth() === m.month && td.getFullYear() === m.year && t.status === 'published';
+                    })
+                    .reduce((sum, t) => {
+                        if (p === 'Telegram') {
+                            let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
+                            return sum + tgSum;
+                        }
+                        return sum + (t.play_counts?.[p] || 0);
+                    }, 0);
+            });
+            return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
+        });
+
+    } else {
+        // Логиka по дням за текущий месяц
+        const currentMonthName = now.toLocaleString('ru-RU', { month: 'long' });
+        document.getElementById('chartTitle').innerText = `Аналитика по дням (${currentMonthName})`;
+        
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+        datasets = platforms.map(p => {
+            const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
+            const data = labels.map(day => {
+                return contentData
+                    .filter(t => {
+                        const td = new Date(t.date);
+                        return td.getDate() === day && 
+                               td.getMonth() === now.getMonth() && 
+                               td.getFullYear() === now.getFullYear() && 
+                               t.status === 'published';
+                    })
+                    .reduce((sum, t) => {
+                        if (p === 'Telegram') {
+                            let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
+                            return sum + tgSum;
+                        }
+                        return sum + (t.play_counts?.[p] || 0);
+                    }, 0);
+            });
+            return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
+        });
+    }
+
+    if (myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { 
+                legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: { 
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
+                x: { grid: { display: false } } 
+            }
+        }
+    });
+}
         function changeStatsMonth(offset) { statsDate.setMonth(statsDate.getMonth() + offset); renderStats(); }
         function renderStats() {
             const filter = document.getElementById('statsPlatformFilter').value, label = document.getElementById('statsMonthLabel');

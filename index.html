@@ -28,32 +28,82 @@
         .social-icon { width: 18px; height: 18px; display: inline-block; vertical-align: middle; }
         /* ТЕМЫ */
 body.theme-dark {
-    background-color: #0f172a !important; /* slate-900 */
-    color: #f1f5f9 !important;
+    background-color: #0f172a !important; /* Очень темный синий */
+    color: #e2e8f0 !important;
 }
 
+/* Контейнеры и карточки */
 body.theme-dark .bg-white, 
-body.theme-dark header, 
+body.theme-dark header,
+body.theme-dark aside > div,
+body.theme-dark .bg-slate-50,
 body.theme-dark #listControls input, 
 body.theme-dark #listControls select,
-body.theme-dark .calendar-day {
-    background-color: #1e293b !important; /* slate-800 */
+body.theme-dark .calendar-day,
+body.theme-dark #editModal .bg-white,
+body.theme-dark #trashModal .bg-white {
+    background-color: #1e293b !important; /* Цвет slate-800 */
     color: #f1f5f9 !important;
     border-color: #334155 !important;
 }
 
+/* Специфичные исправления текста */
 body.theme-dark .text-slate-900, 
 body.theme-dark .text-slate-800,
-body.theme-dark h1, body.theme-dark h2, body.theme-dark h3 {
-    color: #f1f5f9 !important;
+body.theme-dark .text-slate-700,
+body.theme-dark h1, body.theme-dark h2, body.theme-dark h3,
+body.theme-dark .group-hover\:text-blue-600 {
+    color: #f8fafc !important;
 }
 
-body.theme-dark input, body.theme-dark select, body.theme-dark textarea {
+/* Приглушенный текст (теперь он будет светло-серым, а не темно-серым) */
+body.theme-dark .text-slate-400,
+body.theme-dark .text-slate-300,
+body.theme-dark .text-slate-500,
+body.theme-dark label {
+    color: #94a3b8 !important;
+}
+
+/* Инпуты и формы */
+body.theme-dark input, 
+body.theme-dark select, 
+body.theme-dark textarea,
+body.theme-dark .multi-select-box {
     background-color: #0f172a !important;
-    color: white !important;
+    color: #f1f5f9 !important;
     border-color: #334155 !important;
 }
 
+/* Карточки задач в списке */
+body.theme-dark .group.bg-white {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+body.theme-dark .group.bg-white:hover {
+    border-color: #3b82f6 !important;
+    background-color: #263449 !important;
+}
+
+/* Таблицы статистики */
+body.theme-dark .bg-slate-50 { background-color: #0f172a !important; }
+body.theme-dark tr.border-b { border-color: #334155 !important; }
+body.theme-dark tr:hover { background-color: #263449 !important; }
+
+/* Календарь */
+body.theme-dark .calendar-grid { background-color: #334155 !important; gap: 1px; }
+body.theme-dark .calendar-day { background-color: #1e293b !important; }
+body.theme-dark .calendar-day.bg-slate-50 { background-color: #0f172a !important; opacity: 0.5; }
+
+/* Чат */
+body.theme-dark #chatInput { color: white !important; }
+body.theme-dark .bg-slate-100 { background-color: #334155 !important; }
+
+/* Модальные окна */
+body.theme-dark #editModal .border-b,
+body.theme-dark #editModal .bg-emerald-50 {
+    border-color: #334155 !important;
+    background-color: #0f172a !important;
+}
 /* РОЗОВАЯ ТЕМА */
 body.theme-pink {
     background-color: #fff1f2 !important; /* rose-50 */

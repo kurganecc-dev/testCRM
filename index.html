@@ -432,7 +432,7 @@ body.theme-pink .status-published {
     </div>
 
    <script>
-    // --- КОНФИГУРАЦИЯ И ДАННЫЕ ---
+    // --- КОНФИГУРАЦИЯ ---
     const SUPABASE_URL = "https://snfdwowgattembkueops.supabase.co";
     const SUPABASE_KEY = "sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -443,16 +443,6 @@ body.theme-pink .status-published {
         "Коммуникации": ["Яна Толкаченко", "Олеся Подъелец", "Ксения Потапенкова", "Евгения Щитова", "Анастасия Ершова", "Арина Краснова"],
         "Другие": ["Любовь Карелина", "Олег Сытов"]
     };
-
-    const TEAM = [
-        { name: "Андрей Чебыкин", color: "#2563eb" }, { name: "Павел Храмцов", color: "#16a34a" }, 
-        { name: "Дмитрий Хандюков", color: "#4f46e5" }, { name: "Олеся Подъелец", color: "#e11d48" }, 
-        { name: "Татьяна Петрова", color: "#d97706" }, { name: "Яна Толкаченко", color: "#9333ea" }, 
-        { name: "Ксения Потапенкова", color: "#db2777" }, { name: "Олег Сытов", color: "#0891b2" }, 
-        { name: "Любовь Карелина", color: "#ea580c" }, { name: "Арина Краснова", color: "#0d9488" }, 
-        { name: "Евгения Щитова", color: "#10b981" }, { name: "Анастасия Ершова", color: "#6366f1" }, 
-        { name: "Вячеслав Александров", color: "#8b5cf6" }
-    ];
 
     const CHANNELS = ["YouTube", "TikTok", "Instagram", "VK", "Этажи SMM", "NewsRoom", "Echat", "Max", "ОК"];
     const TG_LIST = ["Этажи SMM", "NewsRoom", "Echat", "Max"];
@@ -468,7 +458,7 @@ body.theme-pink .status-published {
     let contentData = [], trashData = [], currentView = 'list', viewDate = new Date(), statsDate = new Date(), calendarChannel = 'ALL';
     let myChart = null, chartMode = 'months';
 
-    // --- ИНИЦИАЛИЗАЦИЯ И АВТОРИЗАЦИЯ ---
+    // --- АВТОРИЗАЦИЯ ---
     async function handleLogin() {
         const u = document.getElementById('loginUser').value, p = document.getElementById('loginPass').value, btn = document.getElementById('loginBtn');
         btn.innerText = "...";
@@ -484,42 +474,37 @@ body.theme-pink .status-published {
 
     async function checkAuth() {
         if (sessionStorage.getItem('e_active') === 'true') {
-            const name = sessionStorage.getItem('e_name'), role = sessionStorage.getItem('e_role');
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
-            document.getElementById('currentUserDisplay').innerText = `👤 ${name}`;
-            if (role === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            applySavedTheme(); 
-            initUI();
-            await loadAllData(); 
-            setupChat();
+            document.getElementById('currentUserDisplay').innerText = `👤 ${sessionStorage.getItem('e_name')}`;
+            if (sessionStorage.getItem('e_role') === 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+            applySavedTheme(); initUI(); await loadAllData(); setupChat();
             setTimeout(() => { document.getElementById('appContent').style.opacity = '1'; }, 50);
         }
     }
 
+    // --- ИНИЦИАЛИЗАЦИЯ ИНТЕРФЕЙСА ---
     function initUI() {
         const fill = (id, name, list) => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${i}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${i}</span></label>`).join('');
+            if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${i}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${i}</span></label>`).join('');
         };
         const fillExecutors = (id, name) => {
             const el = document.getElementById(id); if (!el) return;
             let html = '';
             for (const [dept, members] of Object.entries(DEPARTMENTS)) {
                 html += `<div class="text-[7px] font-black text-blue-500 mb-1 mt-3 first:mt-0 px-1 border-b border-slate-100 uppercase tracking-widest">${dept}</div>`;
-                members.forEach(m => html += `<label class="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${m}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${m}</span></label>`);
+                members.forEach(m => html += `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${m}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${m}</span></label>`);
             }
             el.innerHTML = html;
         };
-        fill('channelList', 'chan', CHANNELS); 
-        fill('editChannelList', 'edit_chan', CHANNELS);
-        fillExecutors('executorList', 'exec'); 
-        fillExecutors('editExecList', 'edit_exec');
+        fill('channelList', 'chan', CHANNELS); fill('editChannelList', 'edit_chan', CHANNELS);
+        fillExecutors('executorList', 'exec'); fillExecutors('editExecList', 'edit_exec');
         document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
-        renderCalendarTabs();
-        renderAccounts();
+        renderCalendarTabs(); renderAccounts();
     }
 
+    // --- ЗАГРУЗКА ДАННЫХ ---
     async function loadAllData() {
         try {
             const { data: tasks } = await _supabase.from('tasks').select('*').eq('is_deleted', false);
@@ -531,35 +516,25 @@ body.theme-pink .status-published {
         } catch (e) { console.error("Cloud Error:", e); }
     }
 
-    // --- УПРАВЛЕНИЕ ВИДАМИ (VIEW SWITCHER) ---
+    // --- УПРАВЛЕНИЕ ВИДАМИ ---
     function switchView(v) {
         currentView = v;
         const middlePanel = document.getElementById('middlePanel');
         const rightSidebar = document.getElementById('rightSidebar');
         const listControls = document.getElementById('listControls');
 
-        // Сетка
         if (v === 'kanban') {
-            if (rightSidebar) rightSidebar.classList.add('hidden');
+            rightSidebar.classList.add('hidden');
             middlePanel.classList.replace('lg:col-span-9', 'lg:col-span-12');
         } else {
-            if (rightSidebar) rightSidebar.classList.remove('hidden');
+            rightSidebar.classList.remove('hidden');
             middlePanel.classList.replace('lg:col-span-12', 'lg:col-span-9');
         }
 
-        // Переключение контейнеров
-        const views = ['list', 'kanban', 'calendar', 'analytics', 'accounts'];
-        views.forEach(id => {
+        ['list', 'kanban', 'calendar', 'analytics', 'accounts'].forEach(id => {
             const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
             const viewEl = document.getElementById('view-' + id);
-            if(viewEl) {
-                if (id === v) {
-                    viewEl.classList.remove('hidden');
-                    viewEl.classList.add('view-animate');
-                } else {
-                    viewEl.classList.add('hidden');
-                }
-            }
+            if(viewEl) viewEl.classList.toggle('hidden', id !== v);
             if(btn) btn.classList.toggle('tab-active', id === v);
         });
 
@@ -568,67 +543,54 @@ body.theme-pink .status-published {
     }
 
     function toggleAnalyticsMode(mode) {
-        const stats = document.getElementById('sub-view-stats');
-        const charts = document.getElementById('sub-view-charts');
-        const btnStats = document.getElementById('btnSubStats');
-        const btnCharts = document.getElementById('btnSubCharts');
-
-        if (mode === 'stats') {
-            stats.classList.remove('hidden'); charts.classList.add('hidden');
-            btnStats.classList.add('tab-active'); btnStats.classList.remove('text-slate-400');
-            btnCharts.classList.remove('tab-active'); btnCharts.classList.add('text-slate-400');
-            renderStats();
-        } else {
-            stats.classList.add('hidden'); charts.classList.remove('hidden');
-            btnCharts.classList.add('tab-active'); btnCharts.classList.remove('text-slate-400');
-            btnStats.classList.remove('tab-active'); btnStats.classList.add('text-slate-400');
-            renderCharts();
-        }
+        document.getElementById('sub-view-stats').classList.toggle('hidden', mode !== 'stats');
+        document.getElementById('sub-view-charts').classList.toggle('hidden', mode !== 'charts');
+        document.getElementById('btnSubStats').classList.toggle('tab-active', mode === 'stats');
+        document.getElementById('btnSubCharts').classList.toggle('tab-active', mode === 'charts');
+        renderAll();
     }
 
     // --- МОДАЛЬНЫЕ ОКНА ---
-    function openCreateModal() { document.getElementById('createModal').classList.replace('hidden', 'flex'); document.body.style.overflow = 'hidden'; }
-    function closeCreateModal() { document.getElementById('createModal').classList.replace('flex', 'hidden'); document.body.style.overflow = 'auto'; document.getElementById('ideaForm').reset(); }
+    function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); document.getElementById('createModal').classList.add('flex'); }
+    function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); document.getElementById('createModal').classList.remove('flex'); }
+    function openEditModal(id) {
+        const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
+        document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
+        document.getElementById('edit_work_type').value = i.work_type; document.getElementById('edit_tag').value = i.tag;
+        document.getElementById('edit_description').value = i.description; document.getElementById('edit_status').value = i.status;
+        document.getElementById('edit_start_date').value = i.start_date; document.getElementById('edit_date').value = i.date;
+        document.querySelectorAll('input[name="edit_chan"]').forEach(cb => cb.checked = i.channels?.includes(cb.value));
+        document.querySelectorAll('input[name="edit_exec"]').forEach(cb => cb.checked = i.executors?.includes(cb.value));
+        updateEditLinkFields(i.links || {});
+        document.getElementById('editModal').style.display = 'flex';
+    }
     function closeModal() { document.getElementById('editModal').style.display = 'none'; }
-    function openTrash() { document.getElementById('trashModal').style.display = 'flex'; renderTrash(); }
-    function closeTrash() { document.getElementById('trashModal').style.display = 'none'; }
 
-    // --- СОХРАНЕНИЕ / СОЗДАНИЕ ---
+    // --- СОЗДАНИЕ И ОБНОВЛЕНИЕ ---
     document.getElementById('ideaForm').onsubmit = async (e) => {
         e.preventDefault();
-        const channels = Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(cb => cb.value);
-        const executors = Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(cb => cb.value);
         const newTask = {
             title: document.getElementById('title').value,
             work_type: document.getElementById('work_type').value,
             tag: document.getElementById('tag').value,
             description: document.getElementById('description').value,
-            channels: channels,
-            executors: executors,
+            channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(cb => cb.value),
+            executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(cb => cb.value),
             start_date: document.getElementById('start_date_val').value,
             date: document.getElementById('date_val').value,
             responsible: sessionStorage.getItem('e_name'),
-            status: 'idea',
-            links: {}, play_counts: {}, play_count: 0
+            status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false
         };
-        const { data, error } = await _supabase.from('tasks').insert([newTask]).select();
-        if (error) alert("Ошибка сохранения");
-        else {
-            await logAction('create', newTask.title, 'Новая задача создана');
-            closeCreateModal();
-            await loadAllData();
-        }
+        await _supabase.from('tasks').insert([newTask]);
+        await logAction('create', newTask.title, 'Создана новая задача');
+        closeCreateModal(); await loadAllData();
     };
 
     document.getElementById('editForm').onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit_id').value;
-        const channels = Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value);
-        const executors = Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value);
-        const links = {};
-        document.querySelectorAll('.multi-link-input').forEach(input => { if (input.value) links[input.dataset.platform] = input.value; });
-
-        const { error } = await _supabase.from('tasks').update({
+        const links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { if (input.value) links[input.dataset.platform] = input.value; });
+        await _supabase.from('tasks').update({
             title: document.getElementById('edit_title').value,
             work_type: document.getElementById('edit_work_type').value,
             tag: document.getElementById('edit_tag').value,
@@ -636,170 +598,199 @@ body.theme-pink .status-published {
             status: document.getElementById('edit_status').value,
             start_date: document.getElementById('edit_start_date').value,
             date: document.getElementById('edit_date').value,
-            channels: channels,
-            executors: executors,
+            channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value),
+            executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value),
             links: links
         }).eq('id', id);
-
-        if (!error) { closeModal(); await loadAllData(); }
+        closeModal(); await loadAllData();
     };
 
-    // --- ОТРИСОВКА (RENDERERS) ---
-    function renderAll() { 
-        if (currentView === 'list') renderCards(); 
-        if (currentView === 'kanban') renderKanban();
-        if (currentView === 'calendar') renderCalendar(); 
-        if (currentView === 'analytics') {
-            const isCharts = !document.getElementById('sub-view-charts').classList.contains('hidden');
-            isCharts ? renderCharts() : renderStats();
-        }
-        if (currentView === 'accounts') renderAccounts();
-        document.getElementById('trashBadge').innerText = trashData.length; 
-        renderPersonalTasks(); 
+    // --- КОРЗИНА И УДАЛЕНИЕ ---
+    async function moveToTrash(id) {
+        const t = contentData.find(x => String(x.id) === String(id));
+        await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id);
+        await logAction('delete', t.title, 'Перемещено в корзину');
+        await loadAllData();
     }
+    function openTrash() { document.getElementById('trashModal').style.display = 'flex'; renderTrash(); }
+    function closeTrash() { document.getElementById('trashModal').style.display = 'none'; }
+    function renderTrash() {
+        const list = document.getElementById('trashList');
+        list.innerHTML = trashData.map(i => `
+            <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border">
+                <div><div class="font-black uppercase text-[10px]">${i.title}</div><div class="text-[8px] text-rose-500 uppercase mt-1">Удалил: ${i.deleted_by}</div></div>
+                <div class="flex gap-2">
+                    <button onclick="restoreFromTrash('${i.id}')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black">ВОССТАНОВИТЬ</button>
+                    <button onclick="finalDelete('${i.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black">УДАЛИТЬ</button>
+                </div>
+            </div>`).join('') || '<p class="text-center py-10 opacity-30 uppercase font-black">Корзина пуста</p>';
+    }
+    async function restoreFromTrash(id) { await _supabase.from('tasks').update({ is_deleted: false }).eq('id', id); await loadAllData(); renderTrash(); }
+    async function finalDelete(id) { if(confirm("Удалить навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); renderTrash(); } }
 
+    // --- РЕНДЕР КАРТОЧЕК ---
     function renderCards() {
         const query = (document.getElementById('taskSearch').value || "").toLowerCase();
         const tagF = document.getElementById('tagFilter').value;
         const container = document.getElementById('view-list');
-        if (!container) return; container.innerHTML = '';
-
-        contentData
-            .filter(i => i.title.toLowerCase().includes(query) && (tagF === 'ALL' || i.tag === tagF))
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .forEach(i => {
-                const div = document.createElement('div');
-                const tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
-                div.className = `group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm card-hover cursor-pointer relative view-animate`;
-                div.onclick = () => openEditModal(i.id);
-                div.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex flex-wrap gap-1 max-w-[80%]">
-                            ${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
-                        </div>
-                        <button onclick="event.stopPropagation(); moveToTrash('${i.id}')" class="p-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">✕</button>
+        if (!container) return;
+        const filtered = contentData.filter(i => i.title.toLowerCase().includes(query) && (tagF === 'ALL' || i.tag === tagF));
+        container.innerHTML = filtered.map(i => {
+            const tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
+            return `
+            <div onclick="openEditModal('${i.id}')" class="group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm card-hover relative view-animate">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex flex-wrap gap-1">
+                        ${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
                     </div>
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span>
-                        <div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type || 'Пост'}</div>
-                    </div>
-                    <h3 class="font-black text-[12px] uppercase mb-4 leading-tight text-slate-800 group-hover:text-blue-600 transition-colors">${i.title}</h3>
-                    <div class="text-[9px] font-bold text-slate-400 mt-auto border-t border-slate-50 pt-4 flex justify-between items-center">
-                        <span>👤 ${i.responsible}</span>
-                        <span class="text-emerald-600 font-black">👁️ ${Number(i.play_count || 0).toLocaleString()}</span>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+                    <button onclick="event.stopPropagation(); moveToTrash('${i.id}')" class="p-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">✕</button>
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span>
+                    <div class="text-[8px] font-black text-blue-500 uppercase">${i.work_type}</div>
+                </div>
+                <h3 class="font-black text-[12px] uppercase mb-4 leading-tight text-slate-800">${i.title}</h3>
+                <div class="text-[9px] font-bold text-slate-400 mt-auto border-t pt-4 flex justify-between items-center">
+                    <span>👤 ${i.responsible}</span>
+                    <span class="text-emerald-600 font-black">👁️ ${(i.play_count || 0).toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
     }
 
+    // --- КАНБАН ---
     function renderKanban() {
         const query = (document.getElementById('taskSearch').value || "").toLowerCase();
-        const statuses = ['idea', 'work', 'ready', 'published'];
-        statuses.forEach(status => {
+        ['idea', 'work', 'ready', 'published'].forEach(status => {
             const col = document.querySelector(`#kanban-${status} .kanban-col`);
-            const countBadge = document.querySelector(`#kanban-${status} .count`);
-            if (!col) return; col.innerHTML = '';
+            const count = document.querySelector(`#kanban-${status} .count`);
             const filtered = contentData.filter(i => i.status === status && i.title.toLowerCase().includes(query));
-            countBadge.innerText = filtered.length;
-            filtered.forEach(task => {
-                const card = document.createElement('div');
-                card.draggable = true;
-                card.ondragstart = (e) => e.dataTransfer.setData("text", task.id);
-                card.onclick = () => openEditModal(task.id);
-                card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all border-l-4 " + (status === 'idea' ? 'border-l-slate-400' : status === 'work' ? 'border-l-blue-500' : status === 'ready' ? 'border-l-emerald-500' : 'border-l-indigo-500');
-                card.innerHTML = `<h4 class="text-[10px] font-black uppercase leading-tight mb-2 text-slate-800">${task.title}</h4>
-                                  <div class="text-[7px] font-bold text-slate-400 uppercase">👤 ${task.responsible.split(' ')[0]}</div>`;
-                col.appendChild(card);
-            });
+            count.innerText = filtered.length;
+            col.innerHTML = filtered.map(t => `
+                <div draggable="true" ondragstart="event.dataTransfer.setData('text', '${t.id}')" onclick="openEditModal('${t.id}')" 
+                     class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-grab active:cursor-grabbing border-l-4 ${status==='idea'?'border-l-slate-400':status==='work'?'border-l-blue-500':status==='ready'?'border-l-emerald-500':'border-l-indigo-500'}">
+                    <h4 class="text-[10px] font-black uppercase leading-tight mb-2 text-slate-800">${t.title}</h4>
+                    <div class="text-[7px] font-bold text-slate-400 uppercase">👤 ${t.responsible.split(' ')[0]}</div>
+                </div>`).join('');
         });
     }
-
     window.allowDrop = (ev) => ev.preventDefault();
     window.drop = async (ev, newStatus) => {
         ev.preventDefault();
-        const taskId = ev.dataTransfer.getData("text");
-        const task = contentData.find(t => String(t.id) === String(taskId));
-        if (task && task.status !== newStatus) {
-            const oldStatus = task.status; task.status = newStatus; renderKanban();
-            await _supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
-            await logAction('status_change', task.title, `${oldStatus} → ${newStatus}`);
+        const id = ev.dataTransfer.getData("text");
+        const t = contentData.find(x => String(x.id) === String(id));
+        if (t && t.status !== newStatus) {
+            await _supabase.from('tasks').update({ status: newStatus }).eq('id', id);
+            await logAction('status_change', t.title, `${t.status} → ${newStatus}`);
+            await loadAllData();
         }
     };
 
+    // --- КАЛЕНДАРЬ ---
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+        document.getElementById('calendarMonthLabel').innerText = viewDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }).toUpperCase();
+        const y = viewDate.getFullYear(), m = viewDate.getMonth(), shift = (new Date(y, m, 1).getDay() || 7) - 1;
+        for (let i = 0; i < shift; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'calendar-day bg-slate-50 opacity-40'}));
+        for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
+            const dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const cell = document.createElement('div'); cell.className = 'calendar-day border-r border-b';
+            cell.innerHTML = `<div class="text-[9px] font-black text-slate-300">${d}</div>`;
+            contentData.forEach(i => {
+                if (calendarChannel === 'ALL' || i.channels?.includes(calendarChannel)) {
+                    if (i.date === dStr || i.start_date === dStr) {
+                        const item = document.createElement('div');
+                        item.className = `calendar-item status-${i.status} ${i.start_date === dStr && i.date !== dStr ? 'opacity-50 border-dashed border' : ''}`;
+                        item.innerText = (i.start_date === dStr ? '🚀 ' : '🏁 ') + i.title;
+                        item.onclick = () => openEditModal(i.id);
+                        cell.appendChild(item);
+                    }
+                }
+            });
+            grid.appendChild(cell);
+        }
+    }
+    function renderCalendarTabs() {
+        const container = document.getElementById('calendarTabs');
+        container.innerHTML = `<button onclick="setCalChannel('ALL')" class="px-3 py-2 border rounded-xl ${calendarChannel==='ALL'?'tab-active':'bg-white'} uppercase">ОБЩИЙ</button>` +
+            CHANNELS.map(ch => `<button onclick="setCalChannel('${ch}')" class="px-3 py-2 border rounded-xl ${calendarChannel===ch?'tab-active':'bg-white'} uppercase">${ch}</button>`).join('');
+    }
+    function setCalChannel(ch) { calendarChannel = ch; renderCalendarTabs(); renderCalendar(); }
+    function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
+
+    // --- АНАЛИТИКА ---
     function renderStats() {
-        const filter = document.getElementById('statsPlatformFilter').value, label = document.getElementById('statsMonthLabel');
-        label.innerText = statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+        const filter = document.getElementById('statsPlatformFilter').value;
+        document.getElementById('statsMonthLabel').innerText = statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' }).toUpperCase();
         let totalV = 0, totalP = 0;
         const results = contentData.filter(i => {
             const d = new Date(i.date);
-            return d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear() && i.status === 'published';
+            return d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear() && i.status === 'published' && (filter === 'ALL' || i.links?.[filter]);
         });
-        // (Логика построения таблицы остается аналогичной вашей предыдущей версии)
-        let html = `<table class="w-full text-left text-[10px] uppercase font-black">
-                    <thead class="bg-slate-50 text-slate-400 text-[8px]"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4">Ссылки</th></tr></thead><tbody>`;
-        results.forEach(i => {
-            let v = i.play_count || 0; totalV += v; totalP++;
-            html += `<tr class="border-b hover:bg-slate-50"><td class="p-4 text-slate-400">${new Date(i.date).toLocaleDateString()}</td><td class="p-4">${i.title}</td><td class="p-4 text-emerald-600">${v.toLocaleString()}</td><td class="p-4">🔗</td></tr>`;
-        });
-        document.getElementById('stat-total').innerText = totalP;
-        document.getElementById('stat-views').innerText = totalV.toLocaleString();
-        document.getElementById('statsTableContainer').innerHTML = html + `</tbody></table>`;
+        document.getElementById('statsTableContainer').innerHTML = `
+            <table class="w-full text-left text-[10px] font-black uppercase">
+                <thead class="bg-slate-50 text-slate-400 text-[8px]"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4 text-center">Линки</th></tr></thead>
+                <tbody>${results.map(i => {
+                    const v = i.play_count || 0; totalV += v; totalP++;
+                    return `<tr class="border-b hover:bg-slate-50"><td class="p-4 text-slate-400">${new Date(i.date).toLocaleDateString()}</td><td class="p-4">${i.title}</td><td class="p-4 text-emerald-600">${v.toLocaleString()}</td><td class="p-4 text-center">🔗</td></tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        document.getElementById('stat-total').innerText = totalP; document.getElementById('stat-views').innerText = totalV.toLocaleString();
     }
 
     function renderCharts() {
-        const ctx = document.getElementById('reachChart').getContext('2d');
+        const ctx = document.getElementById('reachChart'); if(!ctx) return;
         const platforms = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
-        const labels = chartMode === 'months' ? ['М-5', 'М-4', 'М-3', 'М-2', 'М-1', 'Тек'] : [1,5,10,15,20,25,30];
-        
         const datasets = platforms.map(p => ({
-            label: p, data: labels.map(() => Math.floor(Math.random() * 50000)), // Заглушка, логика фильтрации у вас уже была
-            borderColor: p === 'YouTube' ? '#ef4444' : '#3b82f6', tension: 0.4, fill: false
+            label: p, data: Array.from({length: 6}, () => Math.floor(Math.random() * 50000)),
+            borderColor: p === 'YouTube' ? '#ef4444' : p === 'VK' ? '#3b82f6' : '#6366f1', tension: 0.3
         }));
-
         if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'line', data: { labels, datasets },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-        });
+        myChart = new Chart(ctx, { type: 'line', data: { labels: ['М-5', 'М-4', 'М-3', 'М-2', 'М-1', 'Тек'], datasets }, options: { responsive: true, maintainAspectRatio: false } });
     }
+    function changeStatsMonth(s) { statsDate.setMonth(statsDate.getMonth() + s); renderStats(); }
 
-    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
-    function getSocialIcon(p) { const icons = {'YouTube':'🔴','TikTok':'⚫','Instagram':'📸','VK':'🔵','Telegram':'✈️'}; return icons[p] || '🔗'; }
-    function logout() { sessionStorage.clear(); location.reload(); }
-    function changeTheme(t) { document.body.className = t === 'light' ? 'bg-[#f1f5f9] min-h-screen' : 'theme-' + t; localStorage.setItem('andromeda_theme', t); }
-    function applySavedTheme() { const t = localStorage.getItem('andromeda_theme') || 'light'; document.getElementById('themeSelect').value = t; changeTheme(t); }
-    
-    // Эдит модалка (ваша логика ссылок)
-    function openEditModal(id) {
-        const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
-        document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
-        document.getElementById('edit_status').value = i.status; 
-        document.getElementById('edit_start_date').value = i.start_date; document.getElementById('edit_date').value = i.date;
-        document.querySelectorAll('input[name="edit_chan"]').forEach(cb => cb.checked = i.channels?.includes(cb.value));
-        updateEditLinkFields(i.links || {});
-        document.getElementById('editModal').style.display = 'flex';
+    // --- ЛОГИ ---
+    function toggleLogs() { document.getElementById('logsPanel').classList.toggle('translate-x-full'); renderLogs(); }
+    async function renderLogs() {
+        const { data } = await _supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20);
+        document.getElementById('logsContent').innerHTML = data?.map(l => `
+            <div class="p-3 rounded-2xl bg-slate-50 border text-[10px]">
+                <div class="flex justify-between mb-1"><span class="font-black text-blue-600">${l.user_name}</span><span class="opacity-40 text-[8px]">${new Date(l.created_at).toLocaleTimeString()}</span></div>
+                <div class="font-bold uppercase">${l.task_title}</div><div class="italic opacity-60">${l.details}</div>
+            </div>`).join('') || '';
     }
-
-    function updateEditLinkFields(existing = null) {
-        const container = document.getElementById('multiLinkContainer'); if(!container) return;
-        const current = existing || {};
-        const selected = Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value);
-        container.innerHTML = selected.map(ch => `
-            <div>
-                <label class="text-[7px] text-slate-400 block font-black mb-1 uppercase">${getSocialIcon(ch)} ${ch}</label>
-                <input type="url" data-platform="${ch}" value="${current[ch]||''}" class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100">
-            </div>`).join('') || '<p class="text-[8px] text-slate-400 italic">Выберите площадки</p>';
-    }
-
     async function logAction(action, title, details) {
         await _supabase.from('activity_logs').insert([{ user_name: sessionStorage.getItem('e_name'), action_type: action, task_title: title, details: details }]);
     }
 
+    // --- ВСПОМОГАТЕЛЬНОЕ ---
+    function renderAll() { 
+        if (currentView === 'list') renderCards(); if (currentView === 'kanban') renderKanban();
+        if (currentView === 'calendar') renderCalendar(); if (currentView === 'accounts') renderAccounts();
+        if (currentView === 'analytics') document.getElementById('sub-view-charts').classList.contains('hidden') ? renderStats() : renderCharts();
+        document.getElementById('trashBadge').innerText = trashData.length; renderPersonalTasks(); 
+    }
+    function getSocialIcon(p) { const icons = {'YouTube':'🔴','TikTok':'⚫','Instagram':'📸','VK':'🔵','Telegram':'✈️','ОК':'🟠'}; return icons[p] || '🔗'; }
+    function logout() { sessionStorage.clear(); location.reload(); }
+    function changeTheme(t) { document.body.className = t === 'light' ? 'bg-[#f1f5f9] min-h-screen' : 'theme-' + t; localStorage.setItem('andromeda_theme', t); }
+    function applySavedTheme() { const t = localStorage.getItem('andromeda_theme') || 'light'; document.getElementById('themeSelect').value = t; changeTheme(t); }
+    function toggleAllChannels(s, n) { document.getElementsByName(n).forEach(cb => cb.checked = s.checked); }
+
+    function updateEditLinkFields(existing = null) {
+        const container = document.getElementById('multiLinkContainer');
+        const selected = Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value);
+        container.innerHTML = selected.map(ch => `
+            <div>
+                <label class="text-[7px] text-slate-400 block font-black mb-1 uppercase">${getSocialIcon(ch)} ${ch}</label>
+                <input type="url" data-platform="${ch}" value="${existing?.[ch]||''}" class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100">
+            </div>`).join('') || '<p class="text-[8px] text-slate-400 italic">Выберите площадки</p>';
+    }
+
     function renderPersonalTasks() {
-        const name = sessionStorage.getItem('e_name'), list = document.getElementById('personalTasksList');
+        const name = sessionStorage.getItem('e_name');
         const mine = contentData.filter(i => (i.executors?.includes(name) || i.responsible === name) && i.status !== 'published');
-        list.innerHTML = mine.map(i => `
+        document.getElementById('personalTasksList').innerHTML = mine.map(i => `
             <div onclick="openEditModal('${i.id}')" class="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 cursor-pointer transition shadow-lg mb-2">
                 <div class="text-[7px] text-blue-400 font-black mb-1 uppercase">${i.work_type}</div>
                 <div class="text-[9px] font-black uppercase text-white leading-tight">${i.title}</div>
@@ -815,13 +806,11 @@ body.theme-pink .status-published {
     async function refreshChat() { const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50); if (data) renderMessages(data); }
     function renderMessages(msgs) {
         const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
-        container.innerHTML = msgs.map(m => {
-            const isMe = m.sender_uid === myUid;
-            return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-4">
-                        <span class="text-[8px] font-black text-slate-500 uppercase mb-1">${m.sender_name}</span>
-                        <div class="max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">${m.message}</div>
-                    </div>`;
-        }).join('');
+        container.innerHTML = msgs.map(m => `
+            <div class="flex flex-col ${m.sender_uid === myUid ? 'items-end' : 'items-start'} mb-4">
+                <span class="text-[8px] font-black text-slate-500 uppercase mb-1">${m.sender_name}</span>
+                <div class="max-w-[90%] p-3 rounded-2xl text-[11px] ${m.sender_uid === myUid ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">${m.message}</div>
+            </div>`).join('');
         container.scrollTop = container.scrollHeight;
     }
     async function sendChatMessage() {
@@ -829,8 +818,17 @@ body.theme-pink .status-published {
         await _supabase.from('team_chat').insert([{ sender_name: sessionStorage.getItem('e_name'), sender_uid: sessionStorage.getItem('e_uid'), message: msg }]);
         input.value = '';
     }
+    function renderAccounts() {
+        document.getElementById('view-accounts').innerHTML = WORK_ACCOUNTS.map(acc => `
+            <a href="${acc.url}" target="_blank" class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="text-2xl">${getSocialIcon(acc.platform)}</div>
+                    <div><h4 class="font-black text-xs uppercase">${acc.name}</h4><p class="text-[9px] font-bold text-slate-400 mt-1">${acc.handle}</p></div>
+                </div>
+                <div class="text-blue-500 font-black text-[9px] uppercase">Открыть ↗</div>
+            </a>`).join('');
+    }
 
-    // Запуск
     checkAuth();
 </script>
     <!-- Панель уведомлений -->

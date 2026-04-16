@@ -470,30 +470,30 @@ body.theme-pink .status-published {
         const SUPABASE_KEY = "sb_publishable_thlOsL_shAho6ohPV-KVDg_k-GEm5jW";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ОБНОВЛЕННЫЙ СПИСОК КОМАНДЫ (Татьяна Петрова добавлена)
         // ОБНОВЛЕННЫЙ СОСТАВ КОМАНДЫ ПО ОТДЕЛАМ
-const DEPARTMENTS = {
-    "Продакшн": ["Дмитрий Хандюков", "Андрей Чебыкин", "Павел Храмцов"],
-    "Бренд": ["Вячеслав Александров", "Татьяна Петрова"],
-    "Коммуникации": ["Яна Толкаченко", "Олеся Подъелец", "Ксения Потапенкова", "Евгения Щитова", "Анастасия Ершова", "Арина Краснова"],
-    "Другие": ["Любовь Карелина", "Олег Сытов"] // Те, кто был в списке, но не указан в отделах
-};
+        const DEPARTMENTS = {
+            "Продакшн": ["Дмитрий Хандюков", "Андрей Чебыкин", "Павел Храмцов"],
+            "Бренд": ["Вячеслав Александров", "Татьяна Петрова"],
+            "Коммуникации": ["Яна Толкаченко", "Олеся Подъелец", "Ксения Потапенкова", "Евгения Щитова", "Анастасия Ершова", "Арина Краснова"],
+            "Другие": ["Любовь Карелина", "Олег Сытов"]
+        };
 
-// Плоский список для совместимости с другими функциями
-const TEAM = [
-    { name: "Андрей Чебыкин", color: "#2563eb" }, 
-    { name: "Павел Храмцов", color: "#16a34a" }, 
-    { name: "Дмитрий Хандюков", color: "#4f46e5" }, 
-    { name: "Олеся Подъелец", color: "#e11d48" }, 
-    { name: "Татьяна Петрова", color: "#d97706" }, 
-    { name: "Яна Толкаченко", color: "#9333ea" }, 
-    { name: "Ксения Потапенкова", color: "#db2777" }, 
-    { name: "Олег Сытов", color: "#0891b2" }, 
-    { name: "Любовь Карелина", color: "#ea580c" }, 
-    { name: "Арина Краснова", color: "#0d9488" }, 
-    { name: "Евгения Щитова", color: "#10b981" }, 
-    { name: "Анастасия Ершова", color: "#6366f1" }, 
-    { name: "Вячеслав Александров", color: "#8b5cf6" }];
+        const TEAM = [
+            { name: "Андрей Чебыкин", color: "#2563eb" }, 
+            { name: "Павел Храмцов", color: "#16a34a" }, 
+            { name: "Дмитрий Хандюков", color: "#4f46e5" }, 
+            { name: "Олеся Подъелец", color: "#e11d48" }, 
+            { name: "Татьяна Петрова", color: "#d97706" }, 
+            { name: "Яна Толкаченко", color: "#9333ea" }, 
+            { name: "Ксения Потапенкова", color: "#db2777" }, 
+            { name: "Олег Сытов", color: "#0891b2" }, 
+            { name: "Любовь Карелина", color: "#ea580c" }, 
+            { name: "Арина Краснова", color: "#0d9488" }, 
+            { name: "Евгения Щитова", color: "#10b981" }, 
+            { name: "Анастасия Ершова", color: "#6366f1" }, 
+            { name: "Вячеслав Александров", color: "#8b5cf6" }
+        ];
+
         const CHANNELS = ["YouTube", "TikTok", "Instagram", "VK", "Этажи SMM", "NewsRoom", "Echat", "Max", "ОК"];
         const TG_LIST = ["Этажи SMM", "NewsRoom", "Echat", "Max"];
         const WORK_ACCOUNTS = [
@@ -507,8 +507,8 @@ const TEAM = [
 
         let contentData = [], trashData = [], currentView = 'list', viewDate = new Date(), statsDate = new Date(), calendarChannel = 'ALL';
         let myChart = null;
+        let chartMode = 'months';
 
-        // --- ИСПРАВЛЕНИЕ ОШИБКИ: ДОБАВЛЕНА ФУНКЦИЯ ИКОНОК ---
         function getSocialIcon(platform) {
             const icons = {
                 'YouTube': '🔴', 'TikTok': '⚫', 'Instagram': '📸', 'VK': '🔵', 
@@ -546,56 +546,54 @@ const TEAM = [
                 setTimeout(() => { document.getElementById('appContent').style.opacity = '1'; }, 50);
             }
         }
-function toggleLogs() {
-    const panel = document.getElementById('logsPanel');
-    const isHidden = panel.classList.contains('translate-x-full');
-    panel.classList.toggle('translate-x-full', !isHidden);
-    if (isHidden) {
-        document.getElementById('logBadge').classList.add('hidden');
-        renderLogs();
-    }
-}
 
-async function renderLogs() {
-    const { data: logs } = await _supabase.from('activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
+        function toggleLogs() {
+            const panel = document.getElementById('logsPanel');
+            const isHidden = panel.classList.contains('translate-x-full');
+            panel.classList.toggle('translate-x-full', !isHidden);
+            if (isHidden) {
+                document.getElementById('logBadge').classList.add('hidden');
+                renderLogs();
+            }
+        }
 
-    const container = document.getElementById('logsContent');
-    if (!logs || logs.length === 0) {
-        container.innerHTML = '<p class="text-center opacity-30 py-10 uppercase text-[10px] font-bold">Действий пока нет</p>';
-        return;
-    }
+        async function renderLogs() {
+            const { data: logs } = await _supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(30);
+            const container = document.getElementById('logsContent');
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<p class="text-center opacity-30 py-10 uppercase text-[10px] font-bold">Действий пока нет</p>';
+                return;
+            }
+            container.innerHTML = logs.map(l => {
+                const time = new Date(l.created_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+                let icon = "📝";
+                if (l.action_type === 'create') icon = "➕";
+                if (l.action_type === 'delete') icon = "🗑️";
+                if (l.action_type === 'status_change') icon = "🔄";
+                
+                return `
+                    <div class="p-3 rounded-2xl border border-slate-100 bg-slate-50 text-[10px] theme-dark:bg-slate-800">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-black text-blue-600 uppercase">${l.user_name}</span>
+                            <span class="text-[8px] text-slate-400">${time}</span>
+                        </div>
+                        <div class="text-slate-800 font-bold uppercase leading-tight">${icon} ${l.task_title}</div>
+                        <div class="text-[9px] text-slate-500 mt-1 italic">${l.details}</div>
+                    </div>
+                `;
+            }).join('');
+        }
 
-    container.innerHTML = logs.map(l => {
-        const time = new Date(l.created_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
-        let icon = "📝";
-        if (l.action_type === 'create') icon = "➕";
-        if (l.action_type === 'delete') icon = "🗑️";
-        if (l.action_type === 'status_change') icon = "🔄";
-        
-        return `
-            <div class="p-3 rounded-2xl border border-slate-100 bg-slate-50 text-[10px] theme-dark:bg-slate-800">
-                <div class="flex justify-between items-start mb-1">
-                    <span class="font-black text-blue-600 uppercase">${l.user_name}</span>
-                    <span class="text-[8px] text-slate-400">${time}</span>
-                </div>
-                <div class="text-slate-800 font-bold uppercase leading-tight">${icon} ${l.task_title}</div>
-                <div class="text-[9px] text-slate-500 mt-1 italic">${l.details}</div>
-            </div>
-        `;
-    }).join('');
-}
         async function logAction(actionType, taskTitle, details = "") {
-    const userName = sessionStorage.getItem('e_name');
-    await _supabase.from('activity_logs').insert([{
-        user_name: userName,
-        action_type: actionType,
-        task_title: taskTitle,
-        details: details
-    }]);
-}
+            const userName = sessionStorage.getItem('e_name');
+            await _supabase.from('activity_logs').insert([{
+                user_name: userName,
+                action_type: actionType,
+                task_title: taskTitle,
+                details: details
+            }]);
+        }
+
         async function loadAllData() {
             try {
                 const { data: tasks } = await _supabase.from('tasks').select('*').eq('is_deleted', false);
@@ -608,180 +606,161 @@ async function renderLogs() {
         }
 
         function initUI() {
-    // Вспомогательная функция для простых списков (каналы)
-    const fill = (id, name, list) => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${i}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${i}</span></label>`).join('');
-    };
+            const fill = (id, name, list) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = list.map(i => `<label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition"><input type="checkbox" name="${name}" value="${i}" class="rounded text-blue-600 scale-90"> <span class="text-[9px] font-black uppercase text-slate-600">${i}</span></label>`).join('');
+            };
 
-    // Специальная функция для исполнителей с группировкой по отделам
-    const fillExecutors = (id, name) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        let html = '';
-        for (const [dept, members] of Object.entries(DEPARTMENTS)) {
-            html += `<div class="text-[7px] font-black text-blue-500 mb-1 mt-3 first:mt-0 px-1 border-b border-slate-100 uppercase tracking-widest">${dept}</div>`;
-            members.forEach(memberName => {
-                html += `
-                    <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition">
-                        <input type="checkbox" name="${name}" value="${memberName}" class="rounded text-blue-600 scale-90"> 
-                        <span class="text-[9px] font-black uppercase text-slate-600">${memberName}</span>
-                    </label>`;
-            });
-        }
-        el.innerHTML = html;
-    };
+            const fillExecutors = (id, name) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                let html = '';
+                for (const [dept, members] of Object.entries(DEPARTMENTS)) {
+                    html += `<div class="text-[7px] font-black text-blue-500 mb-1 mt-3 first:mt-0 px-1 border-b border-slate-100 uppercase tracking-widest">${dept}</div>`;
+                    members.forEach(memberName => {
+                        html += `
+                            <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg cursor-pointer transition">
+                                <input type="checkbox" name="${name}" value="${memberName}" class="rounded text-blue-600 scale-90"> 
+                                <span class="text-[9px] font-black uppercase text-slate-600">${memberName}</span>
+                            </label>`;
+                    });
+                }
+                el.innerHTML = html;
+            };
 
-    // Заполняем каналы
-    fill('channelList', 'chan', CHANNELS); 
-    fill('editChannelList', 'edit_chan', CHANNELS);
-    
-    // Заполняем исполнителей с категориями
-    fillExecutors('executorList', 'exec'); 
-    fillExecutors('editExecList', 'edit_exec');
+            fill('channelList', 'chan', CHANNELS); 
+            fill('editChannelList', 'edit_chan', CHANNELS);
+            
+            fillExecutors('executorList', 'exec'); 
+            fillExecutors('editExecList', 'edit_exec');
 
-    document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
-    renderCalendarTabs();
-    renderAccounts();
-}
-            fill('channelList', 'chan', CHANNELS); fill('editChannelList', 'edit_chan', CHANNELS);
-            fill('executorList', 'exec', TEAM); fill('editExecList', 'edit_exec', TEAM);
             document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
             renderCalendarTabs();
             renderAccounts();
         }
 
-        // Остальные функции (renderCharts, renderStats, renderCards и т.д.) остаются прежними
         function switchChartMode(mode) {
-    chartMode = mode;
-    // Смена стилей кнопок
-    document.getElementById('btnChartMonths').classList.toggle('tab-active', mode === 'months');
-    document.getElementById('btnChartMonths').classList.toggle('text-slate-400', mode !== 'months');
-    document.getElementById('btnChartDays').classList.toggle('tab-active', mode === 'days');
-    document.getElementById('btnChartDays').classList.toggle('text-slate-400', mode !== 'days');
-    
-    renderCharts();
-}
-function changeTheme(theme) {
-    // Удаляем старые классы тем
-    document.body.classList.remove('theme-dark', 'theme-pink');
-    
-    // Добавляем новую, если она не светлая
-    if (theme !== 'light') {
-        document.body.classList.add('theme-' + theme);
-    }
-    
-    // Сохраняем в настройки пользователя
-    localStorage.setItem('andromeda_theme', theme);
-    
-    // Перерисовываем графики, чтобы они подстроились под фон (опционально)
-    if (currentView === 'charts') renderCharts();
-}
-
-// Вызывать эту функцию при загрузке (внутри checkAuth)
-function applySavedTheme() {
-    const savedTheme = localStorage.getItem('andromeda_theme') || 'light';
-    document.getElementById('themeSelect').value = savedTheme;
-    changeTheme(savedTheme);
-}
-function renderCharts() {
-    const canvas = document.getElementById('reachChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const platforms = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
-    
-    let labels = [];
-    let datasets = [];
-    const now = new Date();
-
-    if (chartMode === 'months') {
-        // Логика за 6 месяцев (старая)
-        document.getElementById('chartTitle').innerText = "Аналитика охватов (6 мес)";
-        const last6Months = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(); d.setMonth(d.getMonth() - i);
-            last6Months.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleString('ru-RU', { month: 'short' }) });
+            chartMode = mode;
+            document.getElementById('btnChartMonths').classList.toggle('tab-active', mode === 'months');
+            document.getElementById('btnChartMonths').classList.toggle('text-slate-400', mode !== 'months');
+            document.getElementById('btnChartDays').classList.toggle('tab-active', mode === 'days');
+            document.getElementById('btnChartDays').classList.toggle('text-slate-400', mode !== 'days');
+            renderCharts();
         }
-        labels = last6Months.map(m => m.label);
 
-        datasets = platforms.map(p => {
-            const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
-            const data = last6Months.map(m => {
-                return contentData
-                    .filter(t => {
-                        const td = new Date(t.date);
-                        return td.getMonth() === m.month && td.getFullYear() === m.year && t.status === 'published';
-                    })
-                    .reduce((sum, t) => {
-                        if (p === 'Telegram') {
-                            let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
-                            return sum + tgSum;
-                        }
-                        return sum + (t.play_counts?.[p] || 0);
-                    }, 0);
-            });
-            return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
-        });
-
-    } else {
-        // Логиka по дням за текущий месяц
-        const currentMonthName = now.toLocaleString('ru-RU', { month: 'long' });
-        document.getElementById('chartTitle').innerText = `Аналитика по дням (${currentMonthName})`;
-        
-        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-        datasets = platforms.map(p => {
-            const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
-            const data = labels.map(day => {
-                return contentData
-                    .filter(t => {
-                        const td = new Date(t.date);
-                        return td.getDate() === day && 
-                               td.getMonth() === now.getMonth() && 
-                               td.getFullYear() === now.getFullYear() && 
-                               t.status === 'published';
-                    })
-                    .reduce((sum, t) => {
-                        if (p === 'Telegram') {
-                            let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
-                            return sum + tgSum;
-                        }
-                        return sum + (t.play_counts?.[p] || 0);
-                    }, 0);
-            });
-            return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
-        });
-    }
-
-    if (myChart) myChart.destroy();
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: labels, datasets: datasets },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { 
-                legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } },
-                tooltip: { mode: 'index', intersect: false }
-            },
-            scales: { 
-                y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
-                x: { grid: { display: false } } 
+        function changeTheme(theme) {
+            document.body.classList.remove('theme-dark', 'theme-pink');
+            if (theme !== 'light') {
+                document.body.classList.add('theme-' + theme);
             }
+            localStorage.setItem('andromeda_theme', theme);
+            if (currentView === 'charts') renderCharts();
         }
-    });
-}
+
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('andromeda_theme') || 'light';
+            document.getElementById('themeSelect').value = savedTheme;
+            changeTheme(savedTheme);
+        }
+
+        function renderCharts() {
+            const canvas = document.getElementById('reachChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const platforms = ["YouTube", "Instagram", "TikTok", "VK", "Telegram"];
+            
+            let labels = [];
+            let datasets = [];
+            const now = new Date();
+
+            if (chartMode === 'months') {
+                document.getElementById('chartTitle').innerText = "Аналитика охватов (6 мес)";
+                const last6Months = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(); d.setMonth(d.getMonth() - i);
+                    last6Months.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleString('ru-RU', { month: 'short' }) });
+                }
+                labels = last6Months.map(m => m.label);
+
+                datasets = platforms.map(p => {
+                    const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
+                    const data = last6Months.map(m => {
+                        return contentData
+                            .filter(t => {
+                                const td = new Date(t.date);
+                                return td.getMonth() === m.month && td.getFullYear() === m.year && t.status === 'published';
+                            })
+                            .reduce((sum, t) => {
+                                if (p === 'Telegram') {
+                                    let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
+                                    return sum + tgSum;
+                                }
+                                return sum + (t.play_counts?.[p] || 0);
+                            }, 0);
+                    });
+                    return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
+                });
+
+            } else {
+                const currentMonthName = now.toLocaleString('ru-RU', { month: 'long' });
+                document.getElementById('chartTitle').innerText = `Аналитика по дням (${currentMonthName})`;
+                
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+                datasets = platforms.map(p => {
+                    const color = p === 'YouTube' ? '#FF0000' : p === 'Instagram' ? '#E4405F' : p === 'TikTok' ? '#000000' : p === 'VK' ? '#0077FF' : '#229ED9';
+                    const data = labels.map(day => {
+                        return contentData
+                            .filter(t => {
+                                const td = new Date(t.date);
+                                return td.getDate() === day && 
+                                       td.getMonth() === now.getMonth() && 
+                                       td.getFullYear() === now.getFullYear() && 
+                                       t.status === 'published';
+                            })
+                            .reduce((sum, t) => {
+                                if (p === 'Telegram') {
+                                    let tgSum = 0; TG_LIST.forEach(tg => tgSum += (t.play_counts?.[tg] || 0));
+                                    return sum + tgSum;
+                                }
+                                return sum + (t.play_counts?.[p] || 0);
+                            }, 0);
+                    });
+                    return { label: p, data: data, borderColor: color, backgroundColor: color + '11', tension: 0.3, fill: true };
+                });
+            }
+
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 10 } } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, 
+                        x: { grid: { display: false } } 
+                    }
+                }
+            });
+        }
+
         function changeStatsMonth(offset) { statsDate.setMonth(statsDate.getMonth() + offset); renderStats(); }
+
         function renderStats() {
             const filter = document.getElementById('statsPlatformFilter').value, label = document.getElementById('statsMonthLabel');
             label.innerText = statsDate.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
             let totalV = 0, totalP = 0;
             const results = contentData.filter(i => {
-    const d = new Date(i.date);
-    const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
-    return dateMatch && i.status === 'published' && (filter === 'ALL' || (i.links && i.links[filter]) || (filter === 'Telegram' && TG_LIST.some(tg => i.links?.[tg])));
-})
-.sort((a, b) => new Date(a.date) - new Date(b.date)); // Сортировка от старых к новым (хронология)
+                const d = new Date(i.date);
+                const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
+                return dateMatch && i.status === 'published' && (filter === 'ALL' || (i.links && i.links[filter]) || (filter === 'Telegram' && TG_LIST.some(tg => i.links?.[tg])));
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
             let html = `<table class="w-full text-left text-[10px] text-slate-800 font-black uppercase"><thead class="bg-slate-50 text-[8px] font-black uppercase text-slate-400"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4 text-center">Линки</th></tr></thead><tbody>`;
             results.forEach(i => {
                 let v = 0, linksHtml = '';
@@ -794,68 +773,86 @@ function renderCharts() {
             document.getElementById('stat-total').innerText = totalP; document.getElementById('stat-views').innerText = totalV.toLocaleString();
             document.getElementById('statsTableContainer').innerHTML = html + `</tbody></table>`;
         }
-        function renderAll() { if (currentView === 'list') renderCards(); if (currentView === 'calendar') renderCalendar(); if (currentView === 'stats') renderStats(); if (currentView === 'charts') renderCharts(); document.getElementById('trashBadge').innerText = trashData.length; renderPersonalTasks(); }
-      function renderCards() {
-    const query = (document.getElementById('taskSearch').value || "").toLowerCase();
-    const tagF = document.getElementById('tagFilter').value;
-    const container = document.getElementById('view-list');
-    if (!container) return;
-    container.innerHTML = '';
 
-    contentData
-        .filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF))
-        .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)) // Хронологический порядок
-        .forEach(i => {
-            const div = document.createElement('div');
-            const tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
-            
-            // Добавляем стили кликабельности и hover-эффект
-            div.className = `group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-xl hover:border-blue-200 cursor-pointer relative`;
-            
-            // Нажатие на всю карточку открывает модалку
-            div.onclick = () => openEditModal(i.id);
+        function renderAll() { 
+            if (currentView === 'list') renderCards(); 
+            if (currentView === 'kanban') renderKanban();
+            if (currentView === 'calendar') renderCalendar(); 
+            if (currentView === 'stats') renderStats(); 
+            if (currentView === 'charts') renderCharts(); 
+            document.getElementById('trashBadge').innerText = trashData.length; 
+            renderPersonalTasks(); 
+        }
 
-            div.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex flex-wrap gap-1 max-w-[80%]">
-                        ${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
-                    </div>
+        function renderCards() {
+            const query = (document.getElementById('taskSearch').value || "").toLowerCase();
+            const tagF = document.getElementById('tagFilter').value;
+            const container = document.getElementById('view-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            contentData
+                .filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF))
+                .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
+                .forEach(i => {
+                    const div = document.createElement('div');
+                    const tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
                     
-                    <!-- Кнопка удаления с защитой от срабатывания клика по карточке -->
-                    <button onclick="event.stopPropagation(); moveToTrash('${i.id}')" 
-                            class="p-2 -mr-2 -mt-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all opacity-0 group-hover:opacity-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                    div.className = `group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-xl hover:border-blue-200 cursor-pointer relative`;
+                    div.onclick = () => openEditModal(i.id);
 
-                <div class="flex items-center gap-2 mb-2">
-                    <span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span>
-                    <div class="text-[8px] font-black text-blue-500 uppercase tracking-tighter">${i.work_type || 'Пост'}</div>
-                </div>
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-wrap gap-1 max-w-[80%]">
+                                ${(i.channels || []).map(c => `<span class="bg-slate-900 text-white text-[7px] px-2 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
+                            </div>
+                            <button onclick="event.stopPropagation(); moveToTrash('${i.id}')" 
+                                    class="p-2 -mr-2 -mt-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all opacity-0 group-hover:opacity-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${tagColor}">${i.tag || 'прочее'}</span>
+                            <div class="text-[8px] font-black text-blue-500 uppercase tracking-tighter">${i.work_type || 'Пост'}</div>
+                        </div>
+                        <h3 class="font-black text-[13px] uppercase mb-4 leading-tight text-slate-800 group-hover:text-blue-600 transition-colors">
+                            ${i.title}
+                        </h3>
+                        <div class="text-[9px] font-bold text-slate-400 mt-auto border-t border-slate-50 pt-4 flex justify-between items-center">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[7px]">👤</div>
+                                <span>${i.responsible}</span>
+                            </div>
+                            <span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded-lg">
+                                👁️ ${Number(i.play_count || 0).toLocaleString()}
+                            </span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+        }
 
-                <h3 class="font-black text-[13px] uppercase mb-4 leading-tight text-slate-800 group-hover:text-blue-600 transition-colors">
-                    ${i.title}
-                </h3>
+        async function moveToTrash(id) { 
+            await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); 
+            await loadAllData(); 
+            const t = contentData.find(x => String(x.id) === String(id));
+            await logAction('delete', t ? t.title : 'Задача', 'Перенесено в корзину');
+        }
 
-                <div class="text-[9px] font-bold text-slate-400 mt-auto border-t border-slate-50 pt-4 flex justify-between items-center">
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center text-[7px]">👤</div>
-                        <span>${i.responsible}</span>
-                    </div>
-                    <span class="text-emerald-600 font-black bg-emerald-50 px-2 py-1 rounded-lg">
-                        👁️ ${Number(i.play_count || 0).toLocaleString()}
-                    </span>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-}
-        async function moveToTrash(id) { await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); await loadAllData(); const t = contentData.find(x => String(x.id) === String(id));
-await logAction('delete', t ? t.title : 'Задача', 'Перенесено в корзину');}
-        async function restoreFromTrash(id) { await _supabase.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id); await loadAllData(); }
-        async function finalDelete(id) { if(confirm("Навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); } }
+        async function restoreFromTrash(id) { 
+            await _supabase.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id); 
+            await loadAllData(); 
+        }
+
+        async function finalDelete(id) { 
+            if(confirm("Навсегда?")) { 
+                await _supabase.from('tasks').delete().eq('id', id); 
+                await loadAllData(); 
+            } 
+        }
+
         function openEditModal(id) {
             const i = contentData.find(x => String(x.id) === String(id)); if(!i) return;
             document.getElementById('edit_id').value = i.id; document.getElementById('edit_title').value = i.title;
@@ -868,24 +865,27 @@ await logAction('delete', t ? t.title : 'Задача', 'Перенесено в
             (i.channels || []).forEach(ch => { const val = (i.links && i.links[ch]) ? i.links[ch] : ''; container.innerHTML += `<div><label class="text-[7px] text-slate-400 block font-black mb-1 uppercase flex items-center gap-2">${getSocialIcon(ch)} ${ch}</label><input type="url" data-platform="${ch}" value="${val}" class="multi-link-input w-full border p-2 rounded-xl text-[9px] font-bold outline-none border-emerald-100 text-slate-800"></div>`; });
             document.getElementById('editModal').style.display = 'flex';
         }
+
         document.getElementById('editForm').onsubmit = async (e) => {
             e.preventDefault(); const id = document.getElementById('edit_id').value, links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
             await _supabase.from('tasks').update({ title: document.getElementById('edit_title').value, work_type: document.getElementById('edit_work_type').value, tag: document.getElementById('edit_tag').value, description: document.getElementById('edit_description').value, status: document.getElementById('edit_status').value, start_date: document.getElementById('edit_start_date').value, date: document.getElementById('edit_date').value, channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), links: links }).eq('id', id);
             await loadAllData(); closeModal();
             const oldTask = contentData.find(x => String(x.id) === String(id));
-const newStatus = document.getElementById('edit_status').value;
-let details = "Обновлены данные";
-if (oldTask && oldTask.status !== newStatus) {
-    details = `Статус изменен: ${oldTask.status} → ${newStatus}`;
-    await logAction('status_change', oldTask.title, details);
-} else {
-    await logAction('update', oldTask.title, details);
-}
+            const newStatus = document.getElementById('edit_status').value;
+            let details = "Обновлены данные";
+            if (oldTask && oldTask.status !== newStatus) {
+                details = `Статус изменен: ${oldTask.status} → ${newStatus}`;
+                await logAction('status_change', oldTask.title, details);
+            } else {
+                await logAction('update', oldTask.title, details);
+            }
         };
+
         document.getElementById('ideaForm').onsubmit = async (e) => {
             e.preventDefault(); const task = { id: Date.now(), title: document.getElementById('title').value, work_type: document.getElementById('work_type').value, tag: document.getElementById('tag').value, description: document.getElementById('description').value, channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), responsible: sessionStorage.getItem('e_name'), start_date: document.getElementById('start_date_val').value || new Date().toISOString().split('T')[0], date: document.getElementById('date_val').value || new Date().toISOString().split('T')[0], status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false };
             await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); await logAction('create', task.title, 'Создана новая задача');
         };
+
         function renderAccounts() {
             const container = document.getElementById('view-accounts');
             container.innerHTML = WORK_ACCOUNTS.map(acc => `
@@ -901,190 +901,114 @@ if (oldTask && oldTask.status !== newStatus) {
                 </a>
             `).join('');
         }
-     function switchView(v) {
-    currentView = v;
-    
-    const middlePanel = document.getElementById('middlePanel');
-    const rightSidebar = document.getElementById('rightSidebar');
-    const listControls = document.getElementById('listControls');
 
-    // Переключение колонок
-    if (v === 'kanban') {
-        rightSidebar.classList.add('hidden');
-        middlePanel.classList.replace('lg:col-span-6', 'lg:col-span-9');
-    } else {
-        rightSidebar.classList.remove('hidden');
-        middlePanel.classList.replace('lg:col-span-9', 'lg:col-span-6');
-    }
+        function switchView(v) {
+            currentView = v;
+            const middlePanel = document.getElementById('middlePanel');
+            const rightSidebar = document.getElementById('rightSidebar');
+            const listControls = document.getElementById('listControls');
 
-    // Логика видимости с анимацией
-    const views = ['list', 'calendar', 'stats', 'charts', 'accounts', 'kanban'];
-    views.forEach(id => {
-        const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
-        const viewEl = document.getElementById('view-' + id);
-        
-        if(viewEl) {
-            if (id === v) {
-                viewEl.classList.remove('hidden');
-                viewEl.classList.add('view-animate'); // Добавляем класс анимации
+            if (v === 'kanban') {
+                rightSidebar.classList.add('hidden');
+                middlePanel.classList.replace('lg:col-span-6', 'lg:col-span-9');
             } else {
-                viewEl.classList.add('hidden');
-                viewEl.classList.remove('view-animate');
+                rightSidebar.classList.remove('hidden');
+                middlePanel.classList.replace('lg:col-span-9', 'lg:col-span-6');
             }
+
+            const views = ['list', 'calendar', 'stats', 'charts', 'accounts', 'kanban'];
+            views.forEach(id => {
+                const btn = document.getElementById('btnView' + id.charAt(0).toUpperCase() + id.slice(1));
+                const viewEl = document.getElementById('view-' + id);
+                if(viewEl) {
+                    if (id === v) {
+                        viewEl.classList.remove('hidden');
+                        viewEl.classList.add('view-animate');
+                    } else {
+                        viewEl.classList.add('hidden');
+                        viewEl.classList.remove('view-animate');
+                    }
+                }
+                if(btn) btn.classList.toggle('tab-active', id === v);
+            });
+
+            if (listControls) listControls.classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
+            renderAll();
         }
-        if(btn) btn.classList.toggle('tab-active', id === v);
-    });
 
-    if (listControls) listControls.classList.toggle('hidden', (v !== 'list' && v !== 'kanban'));
-    
-    renderAll();
-}
-
-// --- ФУНКЦИИ КАНБАНА ---
-
-function renderKanban() {
-    const query = (document.getElementById('taskSearch').value || "").toLowerCase();
-    const tagF = document.getElementById('tagFilter').value;
-    const statuses = ['idea', 'work', 'ready', 'published'];
-    
-    statuses.forEach(status => {
-        const col = document.querySelector(`#kanban-${status} .kanban-col`);
-        const countBadge = document.querySelector(`#kanban-${status} .count`);
-        if (!col) return;
-        
-        col.innerHTML = '';
-        const filtered = contentData.filter(i => 
-            i.status === status && 
-            i.title.toLowerCase().includes(query) && 
-            (tagF === 'ALL' || i.tag === tagF)
-        );
-        
-        countBadge.innerText = filtered.length;
-
-        filtered.forEach(task => {
-            const card = document.createElement('div');
-            card.draggable = true;
-            card.ondragstart = (e) => {
-                e.dataTransfer.setData("text", task.id);
-                card.classList.add('opacity-50');
-            };
-            card.ondragend = () => card.classList.remove('opacity-50');
-            card.onclick = () => openEditModal(task.id);
+        // --- ФУНКЦИИ КАНБАНА ---
+        function renderKanban() {
+            const query = (document.getElementById('taskSearch').value || "").toLowerCase();
+            const tagF = document.getElementById('tagFilter').value;
+            const statuses = ['idea', 'work', 'ready', 'published'];
             
-            card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all border-l-4 " + 
-                            (status === 'idea' ? 'border-l-slate-400' : status === 'work' ? 'border-l-blue-500' : status === 'ready' ? 'border-l-emerald-500' : 'border-l-indigo-500');
+            statuses.forEach(status => {
+                const col = document.querySelector(`#kanban-${status} .kanban-col`);
+                const countBadge = document.querySelector(`#kanban-${status} .count`);
+                if (!col) return;
+                
+                col.innerHTML = '';
+                const filtered = contentData.filter(i => 
+                    i.status === status && 
+                    i.title.toLowerCase().includes(query) && 
+                    (tagF === 'ALL' || i.tag === tagF)
+                );
+                
+                countBadge.innerText = filtered.length;
+
+                filtered.forEach(task => {
+                    const card = document.createElement('div');
+                    card.draggable = true;
+                    card.ondragstart = (e) => {
+                        e.dataTransfer.setData("text", task.id);
+                        card.classList.add('opacity-50');
+                    };
+                    card.ondragend = () => card.classList.remove('opacity-50');
+                    card.onclick = () => openEditModal(task.id);
+                    
+                    card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all border-l-4 " + 
+                                    (status === 'idea' ? 'border-l-slate-400' : status === 'work' ? 'border-l-blue-500' : status === 'ready' ? 'border-l-emerald-500' : 'border-l-indigo-500');
+                    
+                    card.innerHTML = `
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            ${(task.channels || []).slice(0, 3).map(c => `<span class="bg-slate-900 text-white text-[7px] px-1.5 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
+                        </div>
+                        <h4 class="text-[11px] font-black uppercase leading-tight mb-3 text-slate-800 theme-dark:text-white">${task.title}</h4>
+                        <div class="flex justify-between items-center text-[8px] font-bold text-slate-400 border-t pt-2">
+                            <span class="truncate max-w-[60px]">👤 ${task.responsible.split(' ')[0]}</span>
+                            <span class="${new Date(task.date) < new Date() && status !== 'published' ? 'text-rose-500 font-black' : ''}">
+                                📅 ${new Date(task.date).toLocaleDateString('ru-RU', {day:'numeric', month:'short'})}
+                            </span>
+                        </div>
+                    `;
+                    col.appendChild(card);
+                });
+            });
+        }
+
+        window.allowDrop = function(ev) { ev.preventDefault(); };
+
+        window.drop = async function(ev, newStatus) {
+            ev.preventDefault();
+            const taskId = ev.dataTransfer.getData("text");
+            const task = contentData.find(t => String(t.id) === String(taskId));
             
-            card.innerHTML = `
-                <div class="flex flex-wrap gap-1 mb-2">
-                    ${(task.channels || []).slice(0, 3).map(c => `<span class="bg-slate-900 text-white text-[7px] px-1.5 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
-                </div>
-                <h4 class="text-[11px] font-black uppercase leading-tight mb-3 text-slate-800 theme-dark:text-white">${task.title}</h4>
-                <div class="flex justify-between items-center text-[8px] font-bold text-slate-400 border-t pt-2">
-                    <span class="truncate max-w-[60px]">👤 ${task.responsible.split(' ')[0]}</span>
-                    <span class="${new Date(task.date) < new Date() && status !== 'published' ? 'text-rose-500 font-black' : ''}">
-                        📅 ${new Date(task.date).toLocaleDateString('ru-RU', {day:'numeric', month:'short'})}
-                    </span>
-                </div>
-            `;
-            col.appendChild(card);
-        });
-    });
-}
+            if (task && task.status !== newStatus) {
+                const oldStatus = task.status;
+                task.status = newStatus;
+                renderKanban(); 
+                
+                await _supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+                await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
+            }
+        };
 
-// Drag & Drop функции (теперь глобальные)
-window.allowDrop = function(ev) { ev.preventDefault(); };
-window.drop = async function(ev, newStatus) {
-    ev.preventDefault();
-    const taskId = ev.dataTransfer.getData("text");
-    const task = contentData.find(t => String(t.id) === String(taskId));
-    
-    if (task && task.status !== newStatus) {
-        const oldStatus = task.status;
-        task.status = newStatus; // Мгновенно обновляем локально для скорости
-        renderKanban(); 
-        
-        await _supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
-        await logAction('status_change', task.title, `Канбан: ${oldStatus} → ${newStatus}`);
-    }
-};
-
-// ОБНОВЛЕННАЯ функция renderAll
-function renderAll() { 
-    if (currentView === 'list') renderCards(); 
-    if (currentView === 'kanban') renderKanban();
-    if (currentView === 'calendar') renderCalendar(); 
-    if (currentView === 'stats') renderStats(); 
-    if (currentView === 'charts') renderCharts(); 
-    document.getElementById('trashBadge').innerText = trashData.length; 
-    renderPersonalTasks(); 
-}
-
-// ФУНКЦИЯ ОТРИСОВКИ КАНБАНА
-function renderKanban() {
-    const query = (document.getElementById('taskSearch').value || "").toLowerCase();
-    const tagF = document.getElementById('tagFilter').value;
-    const statuses = ['idea', 'work', 'ready', 'published'];
-    
-    statuses.forEach(status => {
-        const col = document.querySelector(`#kanban-${status} .kanban-col`);
-        const countBadge = document.querySelector(`#kanban-${status} .count`);
-        col.innerHTML = '';
-        
-        const filtered = contentData.filter(i => 
-            i.status === status && 
-            i.title.toLowerCase().includes(query) && 
-            (tagF === 'ALL' || i.tag === tagF)
-        );
-        
-        countBadge.innerText = filtered.length;
-
-        filtered.forEach(task => {
-            const card = document.createElement('div');
-            card.draggable = true;
-            card.ondragstart = (e) => e.dataTransfer.setData("text", task.id);
-            card.onclick = () => openEditModal(task.id);
-            card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing transition-all border-l-4 " + 
-                            (status === 'idea' ? 'border-l-slate-400' : status === 'work' ? 'border-l-blue-500' : status === 'ready' ? 'border-l-emerald-500' : 'border-l-indigo-500');
-            
-            card.innerHTML = `
-                <div class="flex flex-wrap gap-1 mb-2">
-                    ${(task.channels || []).slice(0, 2).map(c => `<span class="bg-slate-900 text-white text-[6px] px-1.5 py-0.5 rounded font-black uppercase">${c}</span>`).join('')}
-                </div>
-                <h4 class="text-[10px] font-black uppercase leading-tight mb-2 text-slate-800">${task.title}</h4>
-                <div class="flex justify-between items-center text-[8px] font-bold text-slate-400">
-                    <span>👤 ${task.responsible.split(' ')[0]}</span>
-                    <span class="${new Date(task.date) < new Date() && status !== 'published' ? 'text-rose-500' : ''}">${new Date(task.date).toLocaleDateString('ru-RU', {day:'numeric', month:'short'})}</span>
-                </div>
-            `;
-            col.appendChild(card);
-        });
-    });
-}
-
-// ФУНКЦИИ DRAG & DROP
-function allowDrop(ev) { ev.preventDefault(); }
-
-async function drop(ev, newStatus) {
-    ev.preventDefault();
-    const taskId = ev.dataTransfer.getData("text");
-    const task = contentData.find(t => String(t.id) === String(taskId));
-    
-    if (task && task.status !== newStatus) {
-        const oldStatus = task.status;
-        // Обновляем в базе
-        await _supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
-        // Обновляем локально
-        task.status = newStatus;
-        // Логируем
-        await logAction('status_change', task.title, `Перемещено: ${oldStatus} → ${newStatus} (Kanban)`);
-        renderKanban();
-    }
-}
         function logout() { sessionStorage.clear(); location.reload(); }
         function closeModal() { document.getElementById('editModal').style.display = 'none'; }
         function closeTrash() { document.getElementById('trashModal').style.display = 'none'; }
         function changeMonth(s) { viewDate.setMonth(viewDate.getMonth() + s); renderCalendar(); }
         function toggleAllChannels(s, n) { document.getElementsByName(n).forEach(cb => cb.checked = s.checked); }
+
         async function updateAllMonthStats() {
             const btn = document.getElementById('btnUpdateAll'); btn.innerText = "..."; btn.disabled = true;
             const tasks = contentData.filter(t => t.links && Object.keys(t.links).length > 0 && new Date(t.date).getMonth() === statsDate.getMonth());
@@ -1095,6 +1019,7 @@ async function drop(ev, newStatus) {
             }
             await loadAllData(); btn.innerText = "Обновить"; btn.disabled = false;
         }
+
         async function fetchSingleStat(url, platform) {
             if (!url || url.length < 10) return 0;
             const YT_KEY = localStorage.getItem('yt_key'), AP_TOKEN = localStorage.getItem('apify_token');
@@ -1122,12 +1047,15 @@ async function drop(ev, newStatus) {
                 }
             } catch (e) { return 0; } return 0;
         }
+
         async function saveAdminSettings() { const yt = document.getElementById('ytApiKey').value, ap = document.getElementById('apifyToken').value; await _supabase.from('config').upsert({id: 'yt_key', value: yt}); await _supabase.from('config').upsert({id: 'apify_token', value: ap}); alert("Ок!"); await loadAllData(); }
+
         function openTrash() { 
             const isAdmin = sessionStorage.getItem('e_role') === 'admin', list = document.getElementById('trashList'); list.innerHTML = trashData.length ? '' : '<p class="text-center py-10 opacity-30">ПУСТО</p>';
             trashData.forEach((i) => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-white p-4 rounded-xl border mb-2 shadow-sm"; div.innerHTML = `<div><div class="text-[10px] font-black uppercase mb-1 leading-none text-slate-800">${i.title}</div><div class="text-[7px] text-rose-500 font-bold uppercase mt-1">Удалил: ${i.deleted_by || '???'}</div></div><div class="flex gap-2">${isAdmin ? `<button onclick="restoreFromTrash('${i.id}')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">RESTORE</button><button onclick="finalDelete('${i.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">DELETE</button>` : ''}</div>`; list.appendChild(div); });
             document.getElementById('trashModal').style.display = 'flex';
         }
+
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
             const label = document.getElementById('calendarMonthLabel'); label.innerText = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' }).format(viewDate);
@@ -1140,14 +1068,17 @@ async function drop(ev, newStatus) {
                 grid.appendChild(cell);
             }
         }
+
         function renderCalendarTabs() { const container = document.getElementById('calendarTabs'); container.innerHTML = `<button onclick="setCalChannel('ALL')" class="px-3 py-2 border rounded-xl ${calendarChannel==='ALL'?'tab-active':'bg-white text-slate-400'} uppercase">ОБЩИЙ</button>`; CHANNELS.forEach(ch => container.innerHTML += `<button onclick="setCalChannel('${ch}')" class="px-3 py-2 border rounded-xl ${calendarChannel===ch?'tab-active':'bg-white text-slate-400'} uppercase">${ch}</button>`); }
         function setCalChannel(ch) { calendarChannel = ch; renderCalendarTabs(); renderCalendar(); }
+
         function renderPersonalTasks() {
             const name = sessionStorage.getItem('e_name'), list = document.getElementById('personalTasksList');
             const mine = contentData.filter(i => (i.executors?.includes(name) || i.responsible === name) && i.status !== 'published');
             list.innerHTML = mine.length ? '' : '<p class="text-center py-10 opacity-20 font-black uppercase text-[8px]">Задач нет</p>';
             mine.forEach(i => { const div = document.createElement('div'); div.className = "p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 cursor-pointer transition shadow-lg mb-2"; div.onclick = () => openEditModal(i.id); div.innerHTML = `<div class="text-[7px] text-blue-400 font-black mb-1 uppercase">${i.work_type || 'Пост'}</div><div class="text-[9px] font-black uppercase text-white leading-tight">${i.title}</div>`; list.appendChild(div); });
         }
+
         function exportStatsToCSV() {
             const results = contentData.filter(i => { const d = new Date(i.date); return i.status === 'published' && d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear(); });
             if (results.length === 0) return alert("Нет данных");
@@ -1156,91 +1087,83 @@ async function drop(ev, newStatus) {
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }), url = URL.createObjectURL(blob), link = document.createElement("a");
             link.href = url; link.download = `Report_${statsDate.getMonth()+1}.csv`; link.click();
         }
+
         async function setupChat() {
             const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50);
             if (data) renderMessages(data);
             _supabase.channel('room1').on('postgres_changes', { event: '*', schema: 'public', table: 'team_chat' }, () => refreshChat()).subscribe();
         }
+
         async function refreshChat() { const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50); if (data) renderMessages(data); }
+
         function renderMessages(msgs) {
-    const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
-    const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀']; // Набор быстрых реакций
+            const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
+            const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀'];
 
-    container.innerHTML = msgs.map(m => {
-        const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
-              isMe = m.sender_uid === myUid,
-              reactions = m.reactions || {};
+            container.innerHTML = msgs.map(m => {
+                const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+                      isMe = m.sender_uid === myUid,
+                      reactions = m.reactions || {};
 
-        // Формируем HTML для отображения уже поставленных реакций
-        let reactionsHtml = '<div class="flex flex-wrap gap-1 mt-1">';
-        for (const [emoji, users] of Object.entries(reactions)) {
-            if (users.length > 0) {
-                const iReacted = users.includes(myUid);
-                reactionsHtml += `
-                    <button onclick="toggleReaction(${m.id}, '${emoji}')" 
-                            class="px-1.5 py-0.5 rounded-full text-[9px] transition ${iReacted ? 'bg-blue-500/30 border border-blue-400' : 'bg-slate-700/50 border border-transparent'} hover:border-blue-400">
-                        ${emoji} <span class="opacity-70">${users.length}</span>
-                    </button>`;
-            }
+                let reactionsHtml = '<div class="flex flex-wrap gap-1 mt-1">';
+                for (const [emoji, users] of Object.entries(reactions)) {
+                    if (users.length > 0) {
+                        const iReacted = users.includes(myUid);
+                        reactionsHtml += `
+                            <button onclick="toggleReaction(${m.id}, '${emoji}')" 
+                                    class="px-1.5 py-0.5 rounded-full text-[9px] transition ${iReacted ? 'bg-blue-500/30 border border-blue-400' : 'bg-slate-700/50 border border-transparent'} hover:border-blue-400">
+                                ${emoji} <span class="opacity-70">${users.length}</span>
+                            </button>`;
+                    }
+                }
+                reactionsHtml += '</div>';
+
+                const reactionPicker = `
+                    <div class="absolute ${isMe ? '-left-24' : '-right-24'} top-0 opacity-0 group-hover:opacity-100 transition-all flex bg-slate-800 rounded-full p-1 shadow-xl border border-slate-700 z-10">
+                        ${commonEmojis.map(e => `<span onclick="toggleReaction(${m.id}, '${e}')" class="cursor-pointer hover:scale-125 px-1 transition">${e}</span>`).join('')}
+                    </div>
+                `;
+
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group mb-4 relative">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[8px] font-black text-slate-500 uppercase">${m.sender_name}</span>
+                            <span class="text-[7px] text-slate-600 italic">${time}</span>
+                        </div>
+                        
+                        <div class="relative max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">
+                            ${reactionPicker}
+                            ${m.message}
+                            ${reactionsHtml}
+                            ${isMe ? `<button onclick="deleteMessage(${m.id})" class="absolute -left-6 top-1 text-rose-500 opacity-0 group-hover:opacity-100 transition-all text-[10px]">✕</button>` : ''}
+                        </div>
+                    </div>`;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
         }
-        reactionsHtml += '</div>';
 
-        // Кнопка вызова меню реакций (появляется при наведении)
-        const reactionPicker = `
-            <div class="absolute ${isMe ? '-left-24' : '-right-24'} top-0 opacity-0 group-hover:opacity-100 transition-all flex bg-slate-800 rounded-full p-1 shadow-xl border border-slate-700 z-10">
-                ${commonEmojis.map(e => `<span onclick="toggleReaction(${m.id}, '${e}')" class="cursor-pointer hover:scale-125 px-1 transition">${e}</span>`).join('')}
-            </div>
-        `;
-
-        return `
-            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group mb-4 relative">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[8px] font-black text-slate-500 uppercase">${m.sender_name}</span>
-                    <span class="text-[7px] text-slate-600 italic">${time}</span>
-                </div>
-                
-                <div class="relative max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">
-                    ${reactionPicker}
-                    ${m.message}
-                    ${reactionsHtml}
-                    ${isMe ? `<button onclick="deleteMessage(${m.id})" class="absolute -left-6 top-1 text-rose-500 opacity-0 group-hover:opacity-100 transition-all text-[10px]">✕</button>` : ''}
-                </div>
-            </div>`;
-    }).join('');
-    container.scrollTop = container.scrollHeight;
-}
         async function toggleReaction(msgId, emoji) {
-    const myUid = sessionStorage.getItem('e_uid');
-    
-    // 1. Находим сообщение в текущих данных (локально)
-    const { data: msg } = await _supabase.from('team_chat').select('reactions').eq('id', msgId).single();
-    let reactions = msg.reactions || {};
+            const myUid = sessionStorage.getItem('e_uid');
+            const { data: msg } = await _supabase.from('team_chat').select('reactions').eq('id', msgId).single();
+            let reactions = msg.reactions || {};
 
-    if (!reactions[emoji]) {
-        reactions[emoji] = [];
-    }
+            if (!reactions[emoji]) reactions[emoji] = [];
 
-    // 2. Если пользователь уже ставил эту реакцию — убираем, если нет — добавляем
-    if (reactions[emoji].includes(myUid)) {
-        reactions[emoji] = reactions[emoji].filter(uid => uid !== myUid);
-    } else {
-        reactions[emoji].push(myUid);
-    }
+            if (reactions[emoji].includes(myUid)) {
+                reactions[emoji] = reactions[emoji].filter(uid => uid !== myUid);
+            } else {
+                reactions[emoji].push(myUid);
+            }
 
-    // 3. Сохраняем обратно в базу
-    const { error } = await _supabase
-        .from('team_chat')
-        .update({ reactions: reactions })
-        .eq('id', msgId);
+            await _supabase.from('team_chat').update({ reactions: reactions }).eq('id', msgId);
+        }
 
-    if (error) console.error("Reaction error:", error);
-    // Чат обновится автоматически через Realtime подписку, которую вы уже настроили
-}
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'), msg = input.value.trim(); if (!msg) return;
             await _supabase.from('team_chat').insert([{ sender_name: sessionStorage.getItem('e_name'), sender_uid: sessionStorage.getItem('e_uid'), message: msg }]);
             input.value = '';
         }
+
         async function deleteMessage(id) { if (confirm("Удалить?")) await _supabase.from('team_chat').delete().eq('id', id); }
 
         checkAuth();

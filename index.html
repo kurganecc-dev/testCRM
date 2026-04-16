@@ -263,10 +263,20 @@ body.theme-pink .status-published {
                             </select>
                         </div>
                         <textarea id="description" placeholder="Описание / ТЗ" class="w-full border-2 p-3 rounded-xl text-xs font-medium bg-slate-50 h-20 outline-none focus:border-blue-500"></textarea>
+                        
+                        <!-- ПЛОЩАДКИ (ОБНОВЛЕННЫЙ МОДУЛЬ) -->
                         <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase mb-2 block flex justify-between">Площадки <label class="cursor-pointer text-blue-500 hover:underline"><input type="checkbox" onchange="toggleAllChannels(this, 'chan')"> ВСЕ</label></label>
-                            <div id="channelList" class="multi-select-box text-[9px] space-y-1"></div>
+                            <div class="flex justify-between items-center mb-2 px-1">
+                                <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Площадки</label>
+                                <label class="cursor-pointer text-blue-500 hover:text-blue-700 transition-colors text-[8px] font-black uppercase flex items-center gap-1">
+                                    <input type="checkbox" onchange="toggleAllChannels(this, 'chan')" class="rounded scale-75"> ВСЕ
+                                </label>
+                            </div>
+                            <div id="channelList" class="grid grid-cols-3 gap-1 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                                <!-- JS fill -->
+                            </div>
                         </div>
+
                         <div>
                             <label class="text-[8px] font-black text-purple-500 uppercase mb-2 block tracking-widest text-slate-500">Исполнители</label>
                             <div id="executorList" class="multi-select-box text-[9px] space-y-1"></div>

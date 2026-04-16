@@ -638,7 +638,15 @@ body.theme-pink .status-published {
             renderCalendarTabs();
             renderAccounts();
         }
-
+document.getElementById('start_date_val').addEventListener('change', function() {
+    const startDate = this.value;
+    const endDateInput = document.getElementById('date_val');
+    endDateInput.min = startDate; // Устанавливаем минимально допустимое значение для второго поля
+    
+    if (endDateInput.value && endDateInput.value < startDate) {
+        endDateInput.value = startDate; // Сбрасываем дедлайн на дату старта, если он стал некорректным
+    }
+});
         function switchChartMode(mode) {
             chartMode = mode;
             document.getElementById('btnChartMonths').classList.toggle('tab-active', mode === 'months');
@@ -882,9 +890,42 @@ body.theme-pink .status-published {
         };
 
         document.getElementById('ideaForm').onsubmit = async (e) => {
-            e.preventDefault(); const task = { id: Date.now(), title: document.getElementById('title').value, work_type: document.getElementById('work_type').value, tag: document.getElementById('tag').value, description: document.getElementById('description').value, channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), responsible: sessionStorage.getItem('e_name'), start_date: document.getElementById('start_date_val').value || new Date().toISOString().split('T')[0], date: document.getElementById('date_val').value || new Date().toISOString().split('T')[0], status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false };
-            await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); await logAction('create', task.title, 'Создана новая задача');
-        };
+    e.preventDefault();
+    
+    // Получаем значения дат
+    const startDate = document.getElementById('start_date_val').value;
+    const endDate = document.getElementById('date_val').value;
+
+    // ПРОВЕРКА: Дата дедлайна не должна быть раньше даты старта
+    if (startDate && endDate && endDate < startDate) {
+        alert("Ошибка: Дата срока (дедлайна) не может быть раньше даты старта!");
+        return; // Прерываем выполнение функции
+    }
+
+    const task = { 
+        id: Date.now(), 
+        title: document.getElementById('title').value, 
+        work_type: document.getElementById('work_type').value, 
+        tag: document.getElementById('tag').value, 
+        description: document.getElementById('description').value, 
+        channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), 
+        executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), 
+        responsible: sessionStorage.getItem('e_name'), 
+        start_date: startDate || new Date().toISOString().split('T')[0], 
+        date: endDate || new Date().toISOString().split('T')[0], 
+        status: 'idea', 
+        links: {}, 
+        play_counts: {}, 
+        play_count: 0, 
+        is_deleted: false 
+    };
+
+    await _supabase.from('tasks').insert([task]); 
+    await loadAllData(); 
+    e.target.reset(); 
+    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); 
+    await logAction('create', task.title, 'Создана новая задача');
+};
 
         function renderAccounts() {
             const container = document.getElementById('view-accounts');

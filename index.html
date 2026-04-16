@@ -46,7 +46,11 @@ body.theme-dark #trashModal .bg-white {
     color: #f1f5f9 !important;
     border-color: #334155 !important;
 }
-
+body.theme-dark #logsPanel, body.theme-dark #logsPanel .bg-slate-50 {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+body.theme-dark #logsContent { background-color: #0f172a !important; }
 /* Специфичные исправления текста */
 body.theme-dark .text-slate-900, 
 body.theme-dark .text-slate-800,
@@ -195,7 +199,9 @@ body.theme-pink .status-published {
         <option value="dark">🌙 Темная</option>
         <option value="pink">🌸 Розовая</option>
     </select>
-    
+    <button onclick="toggleLogs()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm hover:bg-slate-100">
+    🔔 <span id="logBadge" class="hidden absolute -top-1 -right-1 bg-blue-600 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">!</span>
+</button>
     <button onclick="openTrash()" class="relative border p-2 rounded-xl bg-slate-50 shadow-sm hover:bg-slate-100">🗑️ <span id="trashBadge" class="absolute -top-1 -right-1 bg-slate-900 text-white text-[7px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span></button>
     <div id="currentUserDisplay" class="text-[10px] font-black uppercase text-slate-900 px-4 py-2 border-l border-slate-100"></div>
     <button onclick="logout()" class="text-rose-500 font-bold text-[9px] uppercase hover:underline transition">Выход</button>
@@ -433,7 +439,56 @@ body.theme-pink .status-published {
                 setTimeout(() => { document.getElementById('appContent').style.opacity = '1'; }, 50);
             }
         }
+function toggleLogs() {
+    const panel = document.getElementById('logsPanel');
+    const isHidden = panel.classList.contains('translate-x-full');
+    panel.classList.toggle('translate-x-full', !isHidden);
+    if (isHidden) {
+        document.getElementById('logBadge').classList.add('hidden');
+        renderLogs();
+    }
+}
 
+async function renderLogs() {
+    const { data: logs } = await _supabase.from('activity_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+    const container = document.getElementById('logsContent');
+    if (!logs || logs.length === 0) {
+        container.innerHTML = '<p class="text-center opacity-30 py-10 uppercase text-[10px] font-bold">Действий пока нет</p>';
+        return;
+    }
+
+    container.innerHTML = logs.map(l => {
+        const time = new Date(l.created_at).toLocaleString('ru-RU', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+        let icon = "📝";
+        if (l.action_type === 'create') icon = "➕";
+        if (l.action_type === 'delete') icon = "🗑️";
+        if (l.action_type === 'status_change') icon = "🔄";
+        
+        return `
+            <div class="p-3 rounded-2xl border border-slate-100 bg-slate-50 text-[10px] theme-dark:bg-slate-800">
+                <div class="flex justify-between items-start mb-1">
+                    <span class="font-black text-blue-600 uppercase">${l.user_name}</span>
+                    <span class="text-[8px] text-slate-400">${time}</span>
+                </div>
+                <div class="text-slate-800 font-bold uppercase leading-tight">${icon} ${l.task_title}</div>
+                <div class="text-[9px] text-slate-500 mt-1 italic">${l.details}</div>
+            </div>
+        `;
+    }).join('');
+}
+        async function logAction(actionType, taskTitle, details = "") {
+    const userName = sessionStorage.getItem('e_name');
+    await _supabase.from('activity_logs').insert([{
+        user_name: userName,
+        action_type: actionType,
+        task_title: taskTitle,
+        details: details
+    }]);
+}
         async function loadAllData() {
             try {
                 const { data: tasks } = await _supabase.from('tasks').select('*').eq('is_deleted', false);
@@ -658,7 +713,8 @@ function renderCharts() {
             container.appendChild(div);
         });
 }
-        async function moveToTrash(id) { await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); await loadAllData(); }
+        async function moveToTrash(id) { await _supabase.from('tasks').update({ is_deleted: true, deleted_by: sessionStorage.getItem('e_name') }).eq('id', id); await loadAllData(); const t = contentData.find(x => String(x.id) === String(id));
+await logAction('delete', t ? t.title : 'Задача', 'Перенесено в корзину');}
         async function restoreFromTrash(id) { await _supabase.from('tasks').update({ is_deleted: false, deleted_by: null }).eq('id', id); await loadAllData(); }
         async function finalDelete(id) { if(confirm("Навсегда?")) { await _supabase.from('tasks').delete().eq('id', id); await loadAllData(); } }
         function openEditModal(id) {
@@ -677,10 +733,19 @@ function renderCharts() {
             e.preventDefault(); const id = document.getElementById('edit_id').value, links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
             await _supabase.from('tasks').update({ title: document.getElementById('edit_title').value, work_type: document.getElementById('edit_work_type').value, tag: document.getElementById('edit_tag').value, description: document.getElementById('edit_description').value, status: document.getElementById('edit_status').value, start_date: document.getElementById('edit_start_date').value, date: document.getElementById('edit_date').value, channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), links: links }).eq('id', id);
             await loadAllData(); closeModal();
+            const oldTask = contentData.find(x => String(x.id) === String(id));
+const newStatus = document.getElementById('edit_status').value;
+let details = "Обновлены данные";
+if (oldTask && oldTask.status !== newStatus) {
+    details = `Статус изменен: ${oldTask.status} → ${newStatus}`;
+    await logAction('status_change', oldTask.title, details);
+} else {
+    await logAction('update', oldTask.title, details);
+}
         };
         document.getElementById('ideaForm').onsubmit = async (e) => {
             e.preventDefault(); const task = { id: Date.now(), title: document.getElementById('title').value, work_type: document.getElementById('work_type').value, tag: document.getElementById('tag').value, description: document.getElementById('description').value, channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), responsible: sessionStorage.getItem('e_name'), start_date: document.getElementById('start_date_val').value || new Date().toISOString().split('T')[0], date: document.getElementById('date_val').value || new Date().toISOString().split('T')[0], status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false };
-            await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+            await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); await logAction('create', task.title, 'Создана новая задача');
         };
         function renderAccounts() {
             const container = document.getElementById('view-accounts');
@@ -863,5 +928,15 @@ function renderCharts() {
 
         checkAuth();
     </script>
+    <!-- Панель уведомлений -->
+<div id="logsPanel" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[150] transform translate-x-full transition-transform duration-300 border-l flex flex-col">
+    <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+        <h3 class="font-black uppercase text-xs text-slate-900">История действий</h3>
+        <button onclick="toggleLogs()" class="text-slate-400 hover:text-rose-500 text-2xl">&times;</button>
+    </div>
+    <div id="logsContent" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
+        <!-- Сюда будут падать логи -->
+    </div>
+</div>
 </body>
 </html>

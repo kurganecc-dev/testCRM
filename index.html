@@ -463,12 +463,17 @@ function renderCharts() {
       function renderCards() {
     const query = (document.getElementById('taskSearch').value || "").toLowerCase();
     const tagF = document.getElementById('tagFilter').value;
+    const showOnlyMine = document.getElementById('myTasksToggle').checked;
+    const myName = sessionStorage.getItem('e_name');
     const container = document.getElementById('view-list');
     if (!container) return;
     container.innerHTML = '';
 
     contentData
-        .filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF))
+        .filter(i => {
+            const matchSearch = i.title.toLowerCase().includes(query);
+            const matchMine = showOnlyMine ? (i.executors?.includes(myName) || i.responsible === myName) : true;
+            return matchSearch && matchMine;
         .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)) // Хронологический порядок
         .forEach(i => {
             const div = document.createElement('div');

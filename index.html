@@ -576,8 +576,29 @@ body.theme-pink .status-published {
             };
             fill('channelList', 'chan', CHANNELS); fill('editChannelList', 'edit_chan', CHANNELS);
             fillExecutors('executorList', 'exec'); fillExecutors('editExecList', 'edit_exec');
+             const startInput = document.getElementById('start_date_val');
+    const endInput = document.getElementById('date_val');
+
+    startInput.addEventListener('change', function() {
+        endInput.min = this.value; // Устанавливаем минимальную дату для дедлайна
+        if (endInput.value && endInput.value < this.value) {
+            endInput.value = this.value; // Сбрасываем дедлайн, если он стал раньше старта
+        }
+    });
+
+    // Логика ограничений для формы редактирования
+    const editStartInput = document.getElementById('edit_start_date');
+    const editEndInput = document.getElementById('edit_date');
+
+    editStartInput.addEventListener('change', function() {
+        editEndInput.min = this.value;
+        if (editEndInput.value && editEndInput.value < this.value) {
+            editEndInput.value = this.value;
+        }
+    });
             document.getElementById('edit_status').innerHTML = Object.entries({idea:"Идея", work:"В работе", ready:"Готово", published:"Опубликовано"}).map(([k,v]) => `<option value="${k}">${v.toUpperCase()}</option>`).join('');
             renderCalendarTabs(); renderAccounts();
+            
         }
 
         // --- NAVIGATION ---
@@ -739,20 +760,79 @@ body.theme-pink .status-published {
         }
 
         document.getElementById('editForm').onsubmit = async (e) => {
-            e.preventDefault(); const id = document.getElementById('edit_id').value, links = {}; document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
-            const oldTask = contentData.find(x => String(x.id) === String(id)), newStatus = document.getElementById('edit_status').value;
-            await _supabase.from('tasks').update({ title: document.getElementById('edit_title').value, work_type: document.getElementById('edit_work_type').value, tag: document.getElementById('edit_tag').value, description: document.getElementById('edit_description').value, status: newStatus, start_date: document.getElementById('edit_start_date').value, date: document.getElementById('edit_date').value, channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), links: links }).eq('id', id);
-            await loadAllData(); closeModal();
-            if (oldTask && oldTask.status !== newStatus) { await logAction('status_change', oldTask.title, `Статус: ${oldStatus} → ${newStatus}`); }
-            else { await logAction('update', oldTask.title, "Данные обновлены"); }
-        };
+    e.preventDefault();
+    const startDate = document.getElementById('edit_start_date').value;
+    const endDate = document.getElementById('edit_date').value;
 
+    if (startDate && endDate && endDate < startDate) {
+        alert("Ошибка: Дедлайн не может быть раньше даты старта!");
+        return;
+    }
+
+    const id = document.getElementById('edit_id').value;
+    const links = {};
+    document.querySelectorAll('.multi-link-input').forEach(input => { links[input.dataset.platform] = input.value; });
+    
+    const oldTask = contentData.find(x => String(x.id) === String(id));
+    const newStatus = document.getElementById('edit_status').value;
+
+    await _supabase.from('tasks').update({ 
+        title: document.getElementById('edit_title').value, 
+        work_type: document.getElementById('edit_work_type').value, 
+        tag: document.getElementById('edit_tag').value, 
+        description: document.getElementById('edit_description').value, 
+        status: newStatus, 
+        start_date: startDate, 
+        date: endDate, 
+        channels: Array.from(document.querySelectorAll('input[name="edit_chan"]:checked')).map(cb => cb.value), 
+        executors: Array.from(document.querySelectorAll('input[name="edit_exec"]:checked')).map(cb => cb.value), 
+        links: links 
+    }).eq('id', id);
+
+    await loadAllData(); 
+    closeModal();
+    
+    if (oldTask && oldTask.status !== newStatus) { 
+        await logAction('status_change', oldTask.title, `Статус: ${oldTask.status} → ${newStatus}`); 
+    } else { 
+        await logAction('update', oldTask.title, "Данные обновлены"); 
+    }
+};
         document.getElementById('ideaForm').onsubmit = async (e) => {
-            e.preventDefault(); const sD = document.getElementById('start_date_val').value, eD = document.getElementById('date_val').value;
-            if (sD && eD && eD < sD) { alert("Ошибка дат!"); return; }
-            const task = { id: Date.now(), title: document.getElementById('title').value, work_type: document.getElementById('work_type').value, tag: document.getElementById('tag').value, description: document.getElementById('description').value, channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), responsible: sessionStorage.getItem('e_name'), start_date: sD || new Date().toISOString().split('T')[0], date: eD || new Date().toISOString().split('T')[0], status: 'idea', links: {}, play_counts: {}, play_count: 0, is_deleted: false };
-            await _supabase.from('tasks').insert([task]); await loadAllData(); e.target.reset(); document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); await logAction('create', task.title, 'Новая задача создана');
-        };
+    e.preventDefault();
+    const startDate = document.getElementById('start_date_val').value;
+    const endDate = document.getElementById('date_val').value;
+
+    // Жёсткая проверка перед отправкой
+    if (startDate && endDate && endDate < startDate) {
+        alert("Ошибка: Дедлайн не может быть раньше даты старта!");
+        return; 
+    }
+
+    const task = { 
+        id: Date.now(), 
+        title: document.getElementById('title').value, 
+        work_type: document.getElementById('work_type').value, 
+        tag: document.getElementById('tag').value, 
+        description: document.getElementById('description').value, 
+        channels: Array.from(document.querySelectorAll('input[name="chan"]:checked')).map(c => c.value), 
+        executors: Array.from(document.querySelectorAll('input[name="exec"]:checked')).map(c => c.value), 
+        responsible: sessionStorage.getItem('e_name'), 
+        start_date: startDate || new Date().toISOString().split('T')[0], 
+        date: endDate || new Date().toISOString().split('T')[0], 
+        status: 'idea', 
+        links: {}, 
+        play_counts: {}, 
+        play_count: 0, 
+        is_deleted: false 
+    };
+
+    await _supabase.from('tasks').insert([task]); 
+    await loadAllData(); 
+    e.target.reset(); 
+    document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false); 
+    await logAction('create', task.title, 'Создана новая задача');
+};
 
         function renderAccounts() { const container = document.getElementById('view-accounts'); container.innerHTML = WORK_ACCOUNTS.map(acc => `<a href="${acc.url}" target="_blank" class="account-card bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl transition-all"><div class="flex items-center gap-5"><div class="p-4 bg-slate-50 rounded-[1.5rem] scale-125">${getSocialIcon(acc.platform)}</div><div><h4 class="font-black text-xs uppercase text-slate-800">${acc.name}</h4><p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">${acc.handle}</p></div></div><div class="text-blue-500 font-black text-[10px] uppercase">Открыть ↗</div></a>`).join(''); }
         function openTrash() { const isAdmin = sessionStorage.getItem('e_role') === 'admin', list = document.getElementById('trashList'); list.innerHTML = trashData.length ? '' : '<p class="text-center py-10 opacity-30">ПУСТО</p>'; trashData.forEach((i) => { const div = document.createElement('div'); div.className = "flex justify-between items-center bg-white p-4 rounded-xl border mb-2 shadow-sm"; div.innerHTML = `<div><div class="text-[10px] font-black uppercase mb-1 leading-none text-slate-800">${i.title}</div><div class="text-[7px] text-rose-500 font-bold uppercase mt-1">Удалил: ${i.deleted_by || '???'}</div></div><div class="flex gap-2">${isAdmin ? `<button onclick="restoreFromTrash('${i.id}')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">RESTORE</button><button onclick="finalDelete('${i.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">DELETE</button>` : ''}</div>`; list.appendChild(div); }); document.getElementById('trashModal').style.display = 'flex'; }

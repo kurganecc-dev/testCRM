@@ -644,7 +644,7 @@ body.theme-pink .status-published {
                 const d = new Date(i.date);
                 const dateMatch = d.getMonth() === statsDate.getMonth() && d.getFullYear() === statsDate.getFullYear();
                 return dateMatch && i.status === 'published' && (filter === 'ALL' || (i.links && i.links[filter]) || (filter === 'Telegram' && TG_LIST.some(tg => i.links?.[tg])));
-            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
             let html = `<table class="w-full text-left text-[10px] text-slate-800 font-black uppercase"><thead class="bg-slate-50 text-[8px] font-black uppercase text-slate-400"><tr><th class="p-4">Дата</th><th class="p-4">Тема</th><th class="p-4">Охват</th><th class="p-4 text-center">Линки</th></tr></thead><tbody>`;
             results.forEach(i => {
@@ -701,7 +701,9 @@ body.theme-pink .status-published {
         function renderCards() {
             const query = (document.getElementById('taskSearch').value || "").toLowerCase(), tagF = document.getElementById('tagFilter').value, container = document.getElementById('view-list');
             if (!container) return; container.innerHTML = '';
-            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF)).sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)).forEach(i => {
+            contentData.filter(i => (i.title.toLowerCase().includes(query)) && (tagF === 'ALL' || i.tag === tagF))
+                .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0) || b.id - a.id) // ИЗМЕНЕНО ТУТ
+                .forEach(i => {
                 const div = document.createElement('div'), tagColor = i.tag === 'ФРК' ? 'bg-amber-100 text-amber-600' : (i.tag === 'УТП' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500');
                 div.className = `group bg-white p-6 rounded-[2rem] border-2 border-transparent status-${i.status} shadow-sm flex flex-col transition-all hover:shadow-xl hover:border-blue-200 cursor-pointer relative`;
                 div.onclick = () => openEditModal(i.id);

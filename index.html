@@ -592,13 +592,79 @@ function renderCharts() {
         }
         async function refreshChat() { const { data } = await _supabase.from('team_chat').select('*').order('created_at', { ascending: true }).limit(50); if (data) renderMessages(data); }
         function renderMessages(msgs) {
-            const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
-            container.innerHTML = msgs.map(m => {
-                const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isMe = m.sender_uid === myUid;
-                return `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group mb-4"><div class="flex items-center gap-2 mb-1"><span class="text-[8px] font-black text-slate-500 uppercase">${m.sender_name}</span><span class="text-[7px] text-slate-600 italic">${time}</span></div><div class="relative max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">${m.message}${isMe ? `<button onclick="deleteMessage(${m.id})" class="absolute -left-6 top-1 text-rose-500 opacity-0 group-hover:opacity-100 transition-all text-[10px]">✕</button>` : ''}</div></div>`;
-            }).join('');
-            container.scrollTop = container.scrollHeight;
+    const container = document.getElementById('chatMessages'), myUid = sessionStorage.getItem('e_uid');
+    const commonEmojis = ['👍', '❤️', '🔥', '✅', '🚀']; // Набор быстрых реакций
+
+    container.innerHTML = msgs.map(m => {
+        const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+              isMe = m.sender_uid === myUid,
+              reactions = m.reactions || {};
+
+        // Формируем HTML для отображения уже поставленных реакций
+        let reactionsHtml = '<div class="flex flex-wrap gap-1 mt-1">';
+        for (const [emoji, users] of Object.entries(reactions)) {
+            if (users.length > 0) {
+                const iReacted = users.includes(myUid);
+                reactionsHtml += `
+                    <button onclick="toggleReaction(${m.id}, '${emoji}')" 
+                            class="px-1.5 py-0.5 rounded-full text-[9px] transition ${iReacted ? 'bg-blue-500/30 border border-blue-400' : 'bg-slate-700/50 border border-transparent'} hover:border-blue-400">
+                        ${emoji} <span class="opacity-70">${users.length}</span>
+                    </button>`;
+            }
         }
+        reactionsHtml += '</div>';
+
+        // Кнопка вызова меню реакций (появляется при наведении)
+        const reactionPicker = `
+            <div class="absolute ${isMe ? '-left-24' : '-right-24'} top-0 opacity-0 group-hover:opacity-100 transition-all flex bg-slate-800 rounded-full p-1 shadow-xl border border-slate-700 z-10">
+                ${commonEmojis.map(e => `<span onclick="toggleReaction(${m.id}, '${e}')" class="cursor-pointer hover:scale-125 px-1 transition">${e}</span>`).join('')}
+            </div>
+        `;
+
+        return `
+            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group mb-4 relative">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[8px] font-black text-slate-500 uppercase">${m.sender_name}</span>
+                    <span class="text-[7px] text-slate-600 italic">${time}</span>
+                </div>
+                
+                <div class="relative max-w-[90%] p-3 rounded-2xl text-[11px] ${isMe ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}">
+                    ${reactionPicker}
+                    ${m.message}
+                    ${reactionsHtml}
+                    ${isMe ? `<button onclick="deleteMessage(${m.id})" class="absolute -left-6 top-1 text-rose-500 opacity-0 group-hover:opacity-100 transition-all text-[10px]">✕</button>` : ''}
+                </div>
+            </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+}
+        async function toggleReaction(msgId, emoji) {
+    const myUid = sessionStorage.getItem('e_uid');
+    
+    // 1. Находим сообщение в текущих данных (локально)
+    const { data: msg } = await _supabase.from('team_chat').select('reactions').eq('id', msgId).single();
+    let reactions = msg.reactions || {};
+
+    if (!reactions[emoji]) {
+        reactions[emoji] = [];
+    }
+
+    // 2. Если пользователь уже ставил эту реакцию — убираем, если нет — добавляем
+    if (reactions[emoji].includes(myUid)) {
+        reactions[emoji] = reactions[emoji].filter(uid => uid !== myUid);
+    } else {
+        reactions[emoji].push(myUid);
+    }
+
+    // 3. Сохраняем обратно в базу
+    const { error } = await _supabase
+        .from('team_chat')
+        .update({ reactions: reactions })
+        .eq('id', msgId);
+
+    if (error) console.error("Reaction error:", error);
+    // Чат обновится автоматически через Realtime подписку, которую вы уже настроили
+}
         async function sendChatMessage() {
             const input = document.getElementById('chatInput'), msg = input.value.trim(); if (!msg) return;
             await _supabase.from('team_chat').insert([{ sender_name: sessionStorage.getItem('e_name'), sender_uid: sessionStorage.getItem('e_uid'), message: msg }]);

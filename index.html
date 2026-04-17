@@ -249,16 +249,18 @@ body.theme-pink .status-published {
         <main class="max-w-[1800px] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- MIDDLE PANEL -->
            <div id="middlePanel" class="lg:col-span-9 space-y-6 transition-all duration-300">
-        <div id="listControls" class="flex flex-col md:flex-row gap-4">
-             <button onclick="openCreateModal()" class="bg-blue-600 text-white px-6 py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
-                <span class="text-lg">+</span> Создать задачу
-            </button>
-            <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white text-slate-800">
-                    <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white text-slate-800">
-                    <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer text-slate-800">
-                        <option value="ALL">Все теги</option><option value="ФРК">ФРК</option><option value="УТП">УТП</option><option value="прочее">Прочее</option>
-                    </select>
-                </div>
+       <div id="listControls" class="flex flex-col md:flex-row gap-4">
+    <button onclick="openCreateModal()" class="bg-blue-600 text-white px-6 py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+        <span class="text-lg">+</span> Создать задачу
+    </button>
+    <input type="text" id="taskSearch" oninput="renderCards()" placeholder="🔍 Поиск по названию..." class="flex-1 p-4 rounded-2xl border-none shadow-sm outline-none font-bold text-xs bg-white text-slate-800">
+    <select id="tagFilter" onchange="renderCards()" class="p-4 rounded-2xl border-none shadow-sm outline-none font-black text-[10px] uppercase bg-white cursor-pointer text-slate-800">
+        <option value="ALL">Все теги</option>
+        <option value="ФРК">ФРК</option>
+        <option value="УТП">УТП</option>
+        <option value="прочее">Прочее</option>
+    </select>
+</div>
                 
                 <!-- VIEW LIST -->
                 <div id="view-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -857,14 +859,13 @@ function closeCreateModal() {
 };
         document.getElementById('ideaForm').onsubmit = async (e) => {
     e.preventDefault();
-    const startDate = document.getElementById('start_date_val').value;
-    const endDate = document.getElementById('date_val').value;
+    const startVal = new Date(startDate).getTime();
+const endVal = new Date(endDate).getTime();
 
-    // Жёсткая проверка перед отправкой
-    if (startDate && endDate && endDate < startDate) {
-        alert("Ошибка: Дедлайн не может быть раньше даты старта!");
-        return; 
-    }
+if (startDate && endDate && endVal < startVal) {
+    alert("Ошибка: Дедлайн не может быть раньше даты старта!");
+    return;
+}
 
     const task = { 
         id: Date.now(), 

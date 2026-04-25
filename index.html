@@ -19,8 +19,8 @@
       <h1 class="text-3xl font-black tracking-tight">ANDROMEDA</h1>
       <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
       <div class="mt-8 space-y-4">
-        <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
-        <input id="loginPass" type="password" placeholder="Пароль" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <input id="loginUser" type="email" placeholder="Email" autocomplete="email" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <input id="loginPass" type="password" placeholder="Пароль" autocomplete="current-password" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
         <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
         <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
       </div>
@@ -451,11 +451,11 @@
   <div id="toastContainer" class="toast-wrap"></div>
 
   <script src="assets/dist/app.bundle.min.js"></script>
+  <script src="assets/js/auth-supabase-ui-fix.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
-    <script src="assets/js/auth-supabase-patch.js"></script>
   </script>
 </body>
 </html>

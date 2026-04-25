@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANDROMEDA | CRM SMM</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="assets/dist/styles.min.css" />
+</head>
+<body class="min-h-screen">
+  <div id="loginOverlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, #1e293b 0%, #000 100%);">
+    <div class="app-surface w-full max-w-sm rounded-[2rem] p-8 text-center">
+      <h1 class="text-3xl font-black tracking-tight">ANDROMEDA</h1>
+      <p class="mt-1 text-[10px] font-black uppercase tracking-[0.3em]" style="color: var(--primary);">CRM SMM SYSTEM</p>
+      <div class="mt-8 space-y-4">
+        <select id="loginUser" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+        <input id="loginPass" type="password" placeholder="Пароль" class="w-full rounded-2xl border p-3 text-center font-bold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+        <button id="loginBtn" class="w-full rounded-2xl px-4 py-4 text-xs font-black uppercase tracking-[0.2em] text-white" style="background: var(--text);">Войти</button>
+        <p id="loginError" class="hidden text-xs font-bold text-rose-500">Ошибка входа</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="appContent" class="hidden opacity-0 transition-opacity duration-500">
+    <header class="sticky top-0 z-50 border-b px-6 py-4" style="background: var(--surface); border-color: var(--border);">
+      <div class="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-8">
+          <div>
+            <h1 class="text-xl font-black leading-none">ANDROMEDA</h1>
+            <p class="mt-1 text-[10px] font-black uppercase" style="color: var(--primary);">CRM SMM</p>
+          </div>
+          <div id="mainTabs" class="flex flex-wrap gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-3">
+          <button id="profileBtn" class="relative inline-flex items-center gap-3 rounded-2xl border px-3 py-2 text-left transition hover:-translate-y-0.5" style="background: var(--surface-2); border-color: var(--border); color: var(--text);">
+            <span id="profileInitials" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[11px] font-black uppercase text-white" style="background: var(--primary);">👤</span>
+            <span class="min-w-0">
+              <span id="profileNameCompact" class="block max-w-[180px] truncate text-[11px] font-black uppercase">Профиль</span>
+              <span class="block text-[9px] font-black uppercase" style="color: var(--muted);">Настройки</span>
+            </span>
+            <span id="profileAlertDot" class="hidden absolute -right-1 -top-1 h-3 w-3 rounded-full bg-blue-600 ring-2" style="--tw-ring-color: var(--surface);"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-12">
+      <section id="middlePanel" class="space-y-6 lg:col-span-12">
+       <div id="listControls" class="flex flex-col gap-4 md:flex-row">
+          <button id="openCreateBtn" class="rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white" style="background: var(--primary);">+ Создать задачу</button>
+          <div id="quickFilters" aria-label="Быстрые фильтры задач">
+            <button type="button" class="quick-filter-btn is-active" data-quick-filter="ALL"><span>Все</span><span class="quick-filter-count" data-filter-count="ALL">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="MINE"><span>Мои</span><span class="quick-filter-count" data-filter-count="MINE">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="TODAY"><span>Сегодня</span><span class="quick-filter-count" data-filter-count="TODAY">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="OVERDUE"><span>Просрочено</span><span class="quick-filter-count" data-filter-count="OVERDUE">0</span></button>
+            <button type="button" class="quick-filter-btn" data-quick-filter="UNASSIGNED"><span>Без исполнителя</span><span class="quick-filter-count" data-filter-count="UNASSIGNED">0</span></button>
+          </div>
+          <input id="taskSearch" type="text" placeholder="Поиск по названию" class="flex-1 rounded-2xl border px-4 py-4 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+          <select id="tagFilter" class="rounded-2xl border px-4 py-4 text-[11px] font-black uppercase outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+            <option value="ALL">Все теги</option>
+            <option value="ФРК">ФРК</option>
+            <option value="УТП">УТП</option>
+            <option value="прочее">Прочее</option>
+          </select>
+        </div>
+
+        <div id="view-list" class="grid grid-cols-1 gap-6 md:grid-cols-2"></div>
+
+       <div id="view-kanban" class="hidden overflow-x-auto pb-4">
+  <div class="flex min-w-[1760px] gap-4">
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase app-surface">
+        💡 Идеи <span id="count-idea">0</span>
+      </div>
+      <div data-kanban="idea" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 70%, transparent);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#8b5cf6;">
+        ✍️ Сценарий <span id="count-script">0</span>
+      </div>
+      <div data-kanban="script" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(139,92,246,.28); background: rgba(139,92,246,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-blue-600 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🎬 Продакшн <span id="count-production">0</span>
+      </div>
+      <div data-kanban="production" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color:#bfdbfe; background:rgba(59,130,246,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#f59e0b;">
+        ✂️ Монтаж <span id="count-editing">0</span>
+      </div>
+      <div data-kanban="editing" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(245,158,11,.28); background: rgba(245,158,11,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#ec4899;">
+        👀 Проверка <span id="count-review">0</span>
+      </div>
+      <div data-kanban="review" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(236,72,153,.28); background: rgba(236,72,153,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-[10px] font-black uppercase text-white" style="background:#14b8a6;">
+        📅 Запланировано <span id="count-scheduled">0</span>
+      </div>
+      <div data-kanban="scheduled" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: rgba(20,184,166,.28); background: rgba(20,184,166,.06);"></div>
+    </div>
+
+    <div class="flex-1">
+      <div class="mb-3 flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">
+        🚀 Опубликовано <span id="count-published">0</span>
+      </div>
+      <div data-kanban="published" class="kanban-col min-h-[520px] rounded-2xl border-2 border-dashed p-3" style="border-color: var(--border); background: rgba(15,23,42,.06);"></div>
+    </div>
+  </div>
+</div>
+
+        <div id="view-calendar" class="hidden space-y-4">
+          <div id="calendarTabs" class="flex flex-wrap gap-2"></div>
+          <div class="app-surface rounded-[2rem] p-6 text-center">
+            <div class="mb-4 flex items-center justify-between">
+              <button id="calendarPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+              <h2 id="calendarMonthLabel" class="text-sm font-black uppercase"></h2>
+              <button id="calendarNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+            </div>
+            <div class="mb-2 grid grid-cols-7 text-[10px] font-black uppercase text-slate-400">
+              <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+        </div>
+
+        <div id="view-analytics" class="hidden space-y-6">
+          <div class="mx-auto flex w-fit gap-1 rounded-2xl p-1 surface-muted text-[10px] font-black uppercase">
+  <button id="analyticsTableBtn" class="tab-active rounded-xl px-6 py-2.5">📊 Таблица</button>
+  <button id="analyticsVisualsBtn" class="rounded-xl px-6 py-2.5 text-slate-400">📈 Графики</button>
+  <button id="analyticsPeopleBtn" class="rounded-xl px-6 py-2.5 text-slate-400">👥 Команда</button>
+</div>
+
+          <div id="analytics-table" class="space-y-6">
+            <div id="adminPanel" class="hidden rounded-[2rem] p-6 text-white" style="background: #0f172a;">
+              <p class="mb-4 text-center text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">Конфигурация API</p>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-[10px] font-bold uppercase text-slate-400">YouTube Key</label>
+                  <input id="ytApiKey" type="password" class="w-full rounded-xl border-none bg-slate-800 p-3 text-sm text-white outline-none" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-[10px] font-bold uppercase text-slate-400">Apify Token</label>
+                  <input id="apifyToken" type="password" class="w-full rounded-xl border-none bg-slate-800 p-3 text-sm text-white outline-none" />
+                </div>
+              </div>
+              <button id="saveAdminSettingsBtn" class="mt-4 w-full rounded-xl bg-blue-600 py-3 text-[10px] font-black uppercase">Сохранить</button>
+            </div>
+
+            <div class="app-surface flex flex-col gap-4 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between">
+              <div class="flex items-center gap-2">
+                <button id="statsPrevBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">←</button>
+                <h2 id="statsMonthLabel" class="w-36 text-center text-sm font-black uppercase"></h2>
+                <button id="statsNextBtn" class="rounded-xl border px-3 py-2" style="border-color: var(--border);">→</button>
+              </div>
+              <select id="statsPlatformFilter" class="rounded-xl border px-3 py-2 text-xs font-bold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);">
+                <option value="ALL">Все площадки</option>
+                <option value="YouTube">YouTube</option>
+                <option value="TikTok">TikTok</option>
+                <option value="Instagram">Instagram</option>
+                <option value="VK">VK</option>
+                <option value="Telegram">Telegram (Все)</option>
+              </select>
+              <div class="flex gap-2">
+                <button id="btnUpdateAll" class="rounded-xl bg-emerald-500 px-4 py-3 text-[10px] font-black uppercase text-white">Обновить</button>
+                <button id="exportStatsBtn" class="rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">CSV</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="app-surface rounded-[2rem] p-6 text-center">
+                <p class="text-[10px] font-black uppercase text-slate-400">Опубликовано</p>
+                <h3 id="stat-total" class="mt-2 text-4xl font-black">0</h3>
+              </div>
+              <div class="app-surface rounded-[2rem] p-6 text-center">
+                <p class="text-[10px] font-black uppercase text-slate-400">Суммарный охват</p>
+                <h3 id="stat-views" class="mt-2 text-4xl font-black text-emerald-600">0</h3>
+              </div>
+            </div>
+
+            <div id="statsTableContainer" class="app-surface overflow-x-auto rounded-[2rem]"></div>
+          </div>
+
+          <div id="analytics-visuals" class="hidden">
+            <div class="app-surface rounded-[2rem] p-8">
+              <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 id="chartTitle" class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Аналитика охватов</h3>
+                <div class="flex gap-1 rounded-xl p-1 surface-muted text-[10px] font-black uppercase">
+                  <button id="chartMonthsBtn" class="tab-active rounded-lg px-3 py-1.5">6 месяцев</button>
+                  <button id="chartDaysBtn" class="rounded-lg px-3 py-1.5 text-slate-400">По дням</button>
+                </div>
+              </div>
+              <div class="relative h-[420px]">
+                <canvas id="reachChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div id="analytics-people" class="hidden app-surface rounded-[2rem] p-6"></div>
+        </div>
+
+        <div id="view-accounts" class="hidden grid grid-cols-1 gap-6 md:grid-cols-2"></div>
+     <div id="view-chat" class="hidden h-full">
+  <div class="app-surface overflow-hidden rounded-[2rem]">
+    <div class="px-6 pt-3">
+      <div id="chatTaskSearchBox" class="chat-task-search-box">
+        <div class="chat-task-search-row">
+          <span class="chat-task-search-icon">🔎</span>
+          <input id="chatTaskSearchInput" type="text" placeholder="Найти задачу и отправить в чат..." autocomplete="off" />
+          <button id="chatTaskSearchClear" type="button" aria-label="Очистить поиск">×</button>
+        </div>
+        <div id="chatTaskSearchResults" class="chat-task-search-results hidden"></div>
+      </div>
+    </div>
+
+    <div id="chatMessages" class="chat-feed px-6 pb-5" style="height: calc(100vh - 220px); min-height: 360px;"></div>
+
+    <div class="border-t p-5" style="border-color: var(--border);">
+      <div class="chat-composer">
+        <div class="chat-quick-actions">
+          <button type="button" class="chat-quick-btn" data-quick-message="Взял в работу">Взял в работу</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Нужен фидбек">Нужен фидбек</button>
+          <button type="button" class="chat-quick-btn" data-quick-message="Готово к проверке">Готово к проверке</button>
+        </div>
+
+        <div class="chat-input-row">
+          <div class="chat-input-wrap">
+            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напиши сообщение команде..."></textarea>
+          </div>
+          <button id="sendChatBtn" class="chat-send-btn" type="button">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      </section>
+
+     </main>
+  </div>
+
+  <div id="editModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[92vh] w-full max-w-5xl flex-col rounded-[2rem]">
+      <div class="flex items-center justify-between border-b p-5" style="border-color: var(--border);">
+        <h2 class="font-black uppercase">Правка задачи</h2>
+        <button data-close-modal="editModal" class="text-4xl text-slate-400">&times;</button>
+      </div>
+      <form id="editForm" class="space-y-6 overflow-y-auto p-8">
+        <input id="edit_id" type="hidden" />
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Тема
+              <input id="edit_title" type="text" required class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label>Тип
+                <select id="edit_work_type" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+              </label>
+              <label>Тег
+                <select id="edit_tag" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+              </label>
+            </div>
+            <label>Статус
+              <select id="edit_status" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></select>
+            </label>
+            <label>Описание
+              <textarea id="edit_description" class="mt-1 h-32 w-full rounded-xl border p-3 text-sm font-medium normal-case outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea>
+            </label>
+          </div>
+
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Площадки</label>
+            <div id="editChannelList" class="multi-select-box"></div>
+            <div class="grid grid-cols-2 gap-3">
+              <label>Старт
+                <input id="edit_start_date" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+              </label>
+              <label>Срок
+                <input id="edit_date" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" />
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-4 text-[11px] font-black uppercase">
+            <label>Исполнители</label>
+            <div id="editExecList" class="multi-select-box"></div>
+            <div class="rounded-[1.5rem] border p-5" style="background: rgba(16,185,129,.06); border-color: rgba(16,185,129,.2);">
+              <label class="mb-3 block text-emerald-700">Ссылки</label>
+              <div id="multiLinkContainer" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+        <button class="w-full rounded-2xl px-4 py-5 text-xs font-black uppercase text-white" style="background: var(--text);">Сохранить</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="createModal" class="hidden fixed inset-0 z-[200] items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[92vh] w-full max-w-4xl flex-col rounded-[2rem]">
+      <div class="flex items-center justify-between border-b p-6" style="border-color: var(--border);">
+        <div><div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Быстрое создание</div><h2 id="createModalTitle" class="mt-1 font-black uppercase">Новая задача</h2><p id="createModalSubtitle" class="mt-2 text-sm font-medium" style="color: var(--muted);">Заполни минимум для старта, детали можно добавить позже.</p></div>
+        <button data-close-modal="createModal" class="text-4xl text-slate-400">&times;</button>
+      </div>
+      <form id="ideaForm" class="space-y-6 overflow-y-auto p-8">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div class="space-y-4">
+            <label class="block text-[11px] font-black uppercase text-slate-400">Основная информация</label>
+            <input id="title" type="text" required placeholder="Тема поста" class="w-full rounded-xl border-2 p-3.5 text-sm font-semibold outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);" /><div id="error_title" class="field-error hidden"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="work_type" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+              <select id="tag" class="w-full rounded-xl border-2 p-3 text-sm font-semibold outline-none" style="background: var(--surface); border-color: var(--border); color: var(--text);"></select>
+            </div>
+            <textarea id="description" placeholder="Описание / ТЗ" class="h-32 w-full rounded-xl border-2 p-3 text-sm font-medium outline-none" style="background: var(--surface-2); border-color: var(--border); color: var(--text);"></textarea><div id="error_description" class="field-error hidden"></div><p class="text-xs font-medium" style="color: var(--muted);">Добавь короткий контекст: что делаем, для какой площадки и какой результат нужен.</p>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="text-[10px] font-black uppercase text-slate-400">Старт
+                <input id="start_date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_start_date_val" class="field-error hidden"></div>
+              </label>
+              <label class="text-[10px] font-black uppercase text-slate-400">Дедлайн
+                <input id="date_val" type="date" class="mt-1 w-full rounded-xl border p-3 text-sm font-semibold" style="background: var(--surface); border-color: var(--border); color: var(--text);" /><div id="error_date_val" class="field-error hidden"></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <label class="text-[11px] font-black uppercase text-slate-400">Площадки</label>
+                <label class="cursor-pointer text-[10px] font-black uppercase" style="color: var(--primary);">
+                  <input id="toggleAllChannels" type="checkbox" class="mr-1" /> Все
+                </label>
+              </div>
+              <div id="channelList" class="grid grid-cols-3 gap-1 rounded-2xl border p-2" style="background: var(--surface-2); border-color: var(--border);"></div><div id="error_channels" class="field-error hidden"></div>
+            </div>
+            <div>
+              <label class="mb-2 block text-[11px] font-black uppercase text-purple-500">Исполнители</label>
+              <div id="executorList" class="multi-select-box"></div><div id="error_executors" class="field-error hidden"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><p class="text-xs font-medium" style="color: var(--muted);">После сохранения задача появится в списке и в календаре.</p><button class="rounded-2xl px-6 py-4 text-sm font-black uppercase text-white" style="background: var(--text);">Создать задачу</button></div>
+      </form>
+    </div>
+  </div>
+
+
+  <div id="profileModal" class="hidden fixed inset-0 z-[230] items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+    <div class="app-surface flex max-h-[86vh] w-full max-w-md flex-col rounded-[2rem] p-6">
+      <div class="mb-5 flex items-start justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div id="profileInitialsModal" class="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black uppercase text-white" style="background: var(--primary);">👤</div>
+          <div>
+            <div class="text-[10px] font-black uppercase tracking-[0.22em]" style="color: var(--primary);">Профиль</div>
+            <div id="currentUserDisplay" class="mt-1 text-sm font-black uppercase"></div>
+            <div id="profileRoleDisplay" class="mt-1 text-[10px] font-black uppercase" style="color: var(--muted);"></div>
+          </div>
+        </div>
+        <button data-close-modal="profileModal" class="text-3xl text-slate-400">&times;</button>
+      </div>
+
+      <div class="space-y-3 overflow-y-auto pr-1">
+        <div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface-2);">
+          <label class="mb-2 block text-[10px] font-black uppercase" style="color: var(--muted);">Тема интерфейса</label>
+          <div id="themeDropdown" class="theme-dropdown" data-value="light">
+            <button id="themeDropdownBtn" type="button" class="theme-dropdown-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="theme-dropdown-current">
+                <span id="themeDropdownIcon" class="theme-dropdown-icon">☀️</span>
+                <span>
+                  <span id="themeDropdownLabel" class="theme-dropdown-label">Светлая</span>
+                  <span class="theme-dropdown-hint">Цветовая схема интерфейса</span>
+                </span>
+              </span>
+              <span class="theme-dropdown-chevron">⌄</span>
+            </button>
+            <div id="themeDropdownMenu" class="theme-dropdown-menu" role="listbox" aria-label="Выбор темы интерфейса">
+              <button type="button" class="theme-dropdown-option" data-theme-option="light" role="option" aria-selected="true">
+                <span class="theme-dropdown-option-icon">☀️</span>
+                <span><span class="theme-dropdown-option-title">Светлая</span><span class="theme-dropdown-option-desc">Чистый дневной режим</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+              <button type="button" class="theme-dropdown-option" data-theme-option="dark" role="option" aria-selected="false">
+                <span class="theme-dropdown-option-icon">🌙</span>
+                <span><span class="theme-dropdown-option-title">Тёмная</span><span class="theme-dropdown-option-desc">Контрастно для вечера</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+              <button type="button" class="theme-dropdown-option" data-theme-option="pink" role="option" aria-selected="false">
+                <span class="theme-dropdown-option-icon">🌸</span>
+                <span><span class="theme-dropdown-option-title">Розовая</span><span class="theme-dropdown-option-desc">Мягкий брендовый акцент</span></span>
+                <span class="theme-dropdown-check">✓</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="logsBtn" class="relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+          <span>
+            <span class="block text-sm font-black uppercase">🔔 История действий</span>
+            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Логи создания, удаления и изменений задач</span>
+          </span>
+          <span id="logBadge" class="hidden flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white">!</span>
+        </button>
+
+        <button id="trashBtn" class="flex w-full items-center justify-between rounded-2xl border p-4 text-left transition hover:-translate-y-0.5" style="border-color: var(--border); background: var(--surface-2); color: var(--text);">
+          <span>
+            <span class="block text-sm font-black uppercase">🗑️ Корзина</span>
+            <span class="mt-1 block text-[11px] font-semibold" style="color: var(--muted);">Восстановление или окончательное удаление</span>
+          </span>
+          <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
+        </button>
+
+        <button id="logoutBtn" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
+          Выйти из аккаунта
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="trashModal" class="hidden fixed inset-0 z-[220] items-center justify-center bg-slate-900/60 p-4">
+    <div class="app-surface flex max-h-[80vh] w-full max-w-2xl flex-col rounded-[2rem] p-8">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="text-lg font-black uppercase">Корзина</h2>
+        <button data-close-modal="trashModal" class="text-3xl text-slate-400">&times;</button>
+      </div>
+      <div id="trashList" class="space-y-3 overflow-y-auto pr-2"></div>
+    </div>
+  </div>
+
+  <div id="logsPanel" class="fixed right-0 top-0 z-[180] flex h-full w-80 translate-x-full flex-col border-l transition-transform duration-300" style="background: var(--surface); border-color: var(--border); box-shadow: var(--shadow);">
+    <div class="flex items-center justify-between border-b p-6" style="background: var(--surface-2); border-color: var(--border);">
+      <h3 class="text-xs font-black uppercase">История действий</h3>
+      <button id="closeLogsBtn" class="text-2xl text-slate-400">&times;</button>
+    </div>
+    <div id="logsContent" class="flex-1 space-y-3 overflow-y-auto p-4"></div>
+  </div>
+
+  <div id="toastContainer" class="toast-wrap"></div>
+
+  <script src="assets/dist/app.bundle.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>

@@ -1,6 +1,3 @@
-/* ANDROMEDA production bundle. Source modules are in assets/js/. */
-
-;/* 01-config.js */
         const AppConfig = {
       supabase: {
         url: 'https://snfdwowgattembkueops.supabase.co',
@@ -47,8 +44,6 @@
       ]
     };
 
-
-;/* 02-state-utils-services.js */
     const AppState = {
       tasks: [],
       trash: [],
@@ -213,8 +208,6 @@
     const getNextStepHint = Utils.getNextStepHint;
     const isSameMonthYear = Utils.isSameMonthYear;
 
-
-;/* 03-tasks.js */
         const TaskHelpers = {
       normalizeLinks(links = {}) {
         return Object.fromEntries(
@@ -638,8 +631,6 @@
       }
     };
 
-
-;/* 04-chat.js */
     const ChatUI = {
       commonEmojis: ['👍', '❤️', '🔥', '✅', '🚀'],
       taskTokenRegex: /\[\[task:(.+?)\]\]/g,
@@ -798,8 +789,6 @@
       }
     };
 
-
-;/* 05-calendar.js */
     const CalendarUI = {
       renderTabs() {
         const container = $('#calendarTabs');
@@ -900,8 +889,6 @@
       }
     };
 
-
-;/* 06-sidebar.js */
     const SidebarUI = {
       getTodayMeta() {
         const today = new Date();
@@ -1043,8 +1030,6 @@
       }
     };
 
-
-;/* 07-analytics.js */
     const AnalyticsUI = {
       getPublishedTasksForMonth() {
         const filter = $('#statsPlatformFilter')?.value || 'ALL';
@@ -1324,8 +1309,6 @@
       }
     };
 
-
-;/* 08-view-render.js */
     const ViewController = {
       applyLayout() {
         const controls = $('#listControls');
@@ -1499,11 +1482,23 @@
     }
 
     function getSocialIcon(platform) {
-      const icons = {
-        YouTube: '🔴', TikTok: '⚫', Instagram: '📸', VK: '🔵', Telegram: '✈️',
-        'Этажи SMM': '📢', NewsRoom: '📰', Echat: '💬', Max: '👔', ОК: '🟠'
+      const safePlatform = escapeHtml(platform || 'Ссылка');
+      const normalized = String(platform || '').trim();
+      const telegramLike = ['Telegram', 'Этажи SMM', 'NewsRoom', 'Echat', 'Max'].includes(normalized);
+      const key = telegramLike ? 'Telegram' : normalized;
+
+      const logos = {
+        YouTube: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000"/><path d="M10 9.2v5.6L15.2 12 10 9.2z" fill="#fff"/></svg>`,
+        TikTok: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#050505"/><path d="M14.2 4.2c.32 2.08 1.5 3.3 3.55 3.45v3.02a6.7 6.7 0 0 1-3.52-1.04v5.34c0 2.8-1.8 4.84-4.62 4.84a4.35 4.35 0 0 1-4.36-4.39c0-2.64 2.03-4.55 4.95-4.42v3.05c-1.18-.15-1.92.43-1.92 1.36 0 .83.58 1.38 1.36 1.38.86 0 1.48-.5 1.48-1.7V4.2h3.08z" fill="#fff"/><path d="M14.2 4.2c.2 1.32.74 2.28 1.64 2.85" stroke="#25f4ee" stroke-width="1.2" fill="none"/><path d="M10.2 11a5.85 5.85 0 0 0-.96.02v2.95" stroke="#fe2c55" stroke-width="1.2" fill="none"/></svg>`,
+        Instagram: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="#e4405f"/><circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="17" cy="7" r="1.35" fill="#fff"/></svg>`,
+        VK: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#0077ff"/><path d="M12.8 16.7c-5.1 0-8-3.5-8.1-9.3h2.6c.08 4.25 1.95 6.05 3.43 6.42V7.4h2.45v3.67c1.46-.16 3-1.83 3.52-3.67h2.45c-.4 2.27-2.1 3.94-3.3 4.63 1.2.56 3.12 2 3.85 4.67H17c-.56-1.76-1.96-3.12-3.82-3.3v3.3h-.38z" fill="#fff"/></svg>`,
+        Telegram: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#229ed9"/><path d="M17.9 7.45 15.9 17c-.15.68-.55.85-1.12.53l-3.1-2.28-1.5 1.44c-.16.16-.3.3-.62.3l.22-3.16 5.76-5.2c.25-.22-.05-.35-.39-.13L8.03 13 4.97 12.04c-.67-.2-.68-.67.14-.99l11.96-4.6c.55-.2 1.04.14.83 1z" fill="#fff"/></svg>`,
+        ОК: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#ee8208"/><path d="M12 12.15a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2zm0-5.85a1.75 1.75 0 1 1 0 3.5 1.75 1.75 0 0 1 0-3.5zm3.75 7.05c-.85.52-1.97.83-3.75.83s-2.9-.31-3.75-.83a1.2 1.2 0 1 0-1.25 2.05c.78.48 1.7.8 2.76.98l-2.1 2.1a1.2 1.2 0 0 0 1.7 1.7L12 17.52l2.64 2.65a1.2 1.2 0 0 0 1.7-1.7l-2.1-2.1a7.2 7.2 0 0 0 2.76-.98 1.2 1.2 0 1 0-1.25-2.05z" fill="#fff"/></svg>`
       };
-      return icons[platform] || '🔗';
+
+      const svg = logos[key] || `<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#64748b"/><path d="M9.4 14.6a3 3 0 0 1 0-4.2l2-2a3 3 0 0 1 4.25 4.25l-.72.72-1.45-1.45.72-.72a.95.95 0 1 0-1.34-1.34l-2 2a.95.95 0 0 0 0 1.34l.45.45-1.45 1.45-.46-.5zm5.2-5.2a3 3 0 0 1 0 4.2l-2 2a3 3 0 0 1-4.25-4.25l.72-.72 1.45 1.45-.72.72a.95.95 0 0 0 1.34 1.34l2-2a.95.95 0 0 0 0-1.34l-.45-.45 1.45-1.45.46.5z" fill="#fff"/></svg>`;
+
+      return `<span class="social-logo" title="${safePlatform}" aria-label="${safePlatform}">${svg}</span>`;
     }
 
     function setVisible(el, isVisible, display = 'block') {
@@ -1948,8 +1943,6 @@ function renderPeopleAnalytics() {
       ChatUI.scrollToBottom();
     }
 
-
-;/* 09-realtime-profile-theme.js */
     async function refreshChat() {
       const { data, error } = await ChatService.fetchMessages(50);
       if (!error && data) {
@@ -2111,8 +2104,6 @@ function renderPeopleAnalytics() {
       applyTheme(theme);
     }
 
-
-;/* 10-forms-stats-search.js */
         async function logAction(actionType, taskTitle, details = '') {await LogService.create(actionType, taskTitle, details);
     }
 
@@ -2688,8 +2679,6 @@ function getChatTaskSearchMatches(query = '') {
       }
     }
 
-
-;/* 11-events-init.js */
     function bindEvents() {
       $('#loginBtn').addEventListener('click', handleLogin);
       $('#loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
@@ -2990,8 +2979,6 @@ if (viewTab) {
     bindEvents();
     checkAuth();
 
-
-;/* 12-mobile-enhancements.js */
     (function mobileEnhancements() {
       const root = document.documentElement;
       function setViewportHeight() { root.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px'); }
@@ -3018,4 +3005,3 @@ if (viewTab) {
       document.addEventListener('click', event => { if (event.target.closest('.view-tab')) requestAnimationFrame(scrollActiveTabIntoView); });
       enhance();
     })();
-

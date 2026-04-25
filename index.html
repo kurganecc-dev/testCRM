@@ -455,6 +455,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
+    <script src="assets/js/auth-supabase-patch.js"></script>
   </script>
 </body>
 </html>

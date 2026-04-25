@@ -422,7 +422,26 @@
           </span>
           <span id="trashBadge" class="flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-black text-white">0</span>
         </button>
+<div class="rounded-2xl border p-4" style="border-color: var(--border); background: var(--surface-2);">
+  <label class="mb-2 block text-[10px] font-black uppercase" style="color: var(--muted);">
+    Смена пароля
+  </label>
 
+  <input id="newPassword" type="password" placeholder="Новый пароль"
+    class="mb-2 w-full rounded-xl border p-3 text-sm font-semibold outline-none"
+    style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+
+  <input id="confirmPassword" type="password" placeholder="Повторите пароль"
+    class="mb-3 w-full rounded-xl border p-3 text-sm font-semibold outline-none"
+    style="background: var(--surface); border-color: var(--border); color: var(--text);" />
+
+  <button id="changePasswordBtn"
+    class="w-full rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-black uppercase text-white">
+    Сменить пароль
+  </button>
+
+  <p id="changePasswordMessage" class="mt-2 hidden text-xs font-bold"></p>
+</div>
         <button id="logoutBtn" class="flex w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-[11px] font-black uppercase text-rose-600">
           Выйти из аккаунта
         </button>

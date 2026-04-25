@@ -470,12 +470,16 @@
   <div id="toastContainer" class="toast-wrap"></div>
 
   <script src="assets/dist/app.bundle.min.js"></script>
-<script src="assets/js/auth-supabase-patch.js"></script>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-  }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(() => {})
+  );
+}
+</script>
+
+<script src="assets/js/auth-supabase-patch.js"></script>
 </script>
 </body>
 </html>

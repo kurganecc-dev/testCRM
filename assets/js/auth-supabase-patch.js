@@ -245,3 +245,49 @@
     initAuthPatch();
   }
 })();
+document.addEventListener('click', async (event) => {
+  if (event.target?.id !== 'changePasswordBtn') return;
+
+  const password = document.getElementById('newPassword')?.value || '';
+  const confirm = document.getElementById('confirmPassword')?.value || '';
+  const message = document.getElementById('changePasswordMessage');
+
+  message.classList.remove('hidden');
+  message.style.color = '#e11d48';
+
+  if (password.length < 8) {
+    message.textContent = 'Пароль должен быть минимум 8 символов';
+    return;
+  }
+
+  if (password !== confirm) {
+    message.textContent = 'Пароли не совпадают';
+    return;
+  }
+
+  const supabaseClient =
+    window.db ||
+    window.Services?.db ||
+    (typeof Services !== 'undefined' ? Services.db : null) ||
+    (typeof db !== 'undefined' ? db : null);
+
+  if (!supabaseClient) {
+    message.textContent = 'Ошибка: Supabase не найден';
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.updateUser({
+    password
+  });
+
+  if (error) {
+    message.textContent = error.message || 'Не удалось сменить пароль';
+    return;
+  }
+
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+
+  message.style.color = '#16a34a';
+  message.textContent = 'Пароль успешно изменён';
+});
